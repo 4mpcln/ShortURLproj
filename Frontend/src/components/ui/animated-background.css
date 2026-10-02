@@ -1,0 +1,72 @@
+.app-background-shell {
+  position: relative;
+  isolation: isolate;
+  min-height: 100vh;
+  min-height: 100svh;
+}
+
+.app-background-shell > header,
+.app-background-shell > main {
+  position: relative;
+  z-index: 1;
+}
+
+.animated-background {
+  --background-ink: 40 40 45;
+  --background-shade: 255 255 255;
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  background: #f4f4f5;
+}
+
+[data-theme="dark"] .animated-background {
+  --background-ink: 255 255 255;
+  --background-shade: 0 0 0;
+  background: #050505;
+}
+
+.animated-background > div { position: absolute; inset: 0; }
+
+.animated-background__grid {
+  opacity: 0.22;
+  background-image:
+    linear-gradient(rgb(var(--background-ink) / 24%) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(var(--background-ink) / 24%) 1px, transparent 1px),
+    linear-gradient(rgb(68 68 68 / 10%) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(var(--background-ink) / 10%) 1px, transparent 1px);
+  background-size: 50px 50px, 50px 50px, 18px 18px, 18px 18px;
+}
+
+.animated-background__light {
+  opacity: 0.7;
+  background:
+    radial-gradient(ellipse at 18% 24%, rgb(var(--background-ink) / 18%), transparent 34%),
+    radial-gradient(ellipse at 83% 30%, rgb(var(--background-ink) / 10%), transparent 32%),
+    radial-gradient(ellipse at 50% 86%, rgb(var(--background-ink) / 9%), transparent 38%),
+    radial-gradient(circle at 10% 72%, rgb(var(--background-ink) / 13%), transparent 18%),
+    radial-gradient(circle at 35% 45%, rgb(var(--background-ink) / 8%), transparent 16%),
+    radial-gradient(circle at 68% 64%, rgb(var(--background-ink) / 10%), transparent 18%),
+    radial-gradient(circle at 92% 82%, rgb(var(--background-ink) / 11%), transparent 20%),
+    linear-gradient(90deg, rgb(var(--background-ink) / 8%), transparent 28%, transparent 72%, rgb(var(--background-ink) / 8%));
+}
+
+.animated-background__texture {
+  opacity: 0.45;
+  background-image:
+    repeating-radial-gradient(circle at 20% 30%, rgb(var(--background-ink) / 8%) 0 1px, transparent 1px 5px),
+    repeating-linear-gradient(0deg, rgb(var(--background-ink) / 2.5%) 0 1px, transparent 1px 4px);
+  mix-blend-mode: multiply;
+}
+
+[data-theme="dark"] .animated-background__texture { mix-blend-mode: screen; }
+
+.animated-background__vignette {
+  background:
+    radial-gradient(ellipse at center, transparent 0%, rgb(var(--background-shade) / 18%) 52%, rgb(var(--background-shade) / 78%) 100%),
+    linear-gradient(180deg, rgb(var(--background-shade) / 28%), transparent 24%, transparent 72%, rgb(var(--background-shade) / 34%));
+}
+
+.animated-background__overlay { background: rgb(var(--background-shade) / 20%); }

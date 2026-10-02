@@ -1,0 +1,34 @@
+.help-tooltip { display: inline-flex; }
+
+.help-tooltip button {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  min-width: 24px;
+  min-height: 24px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--form-muted);
+}
+
+.help-tooltip button:hover { color: var(--form-text); }
+.help-tooltip button:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
+
+.help-tooltip__content {
+  position: fixed;
+  z-index: 1000;
+  transform: translateY(-100%);
+  padding: 10px 12px;
+  border: 1px solid rgb(255 255 255 / 20%);
+  border-radius: 8px;
+  background: #252528;
+  color: #fafafa;
+  box-shadow: 0 6px 18px rgb(0 0 0 / 20%);
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}

@@ -1,0 +1,192 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "ShortURL API",
+    "version": "0.1.0"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3211"
+    }
+  ],
+  "paths": {
+    "/api/short-urls": {
+      "get": {
+        "operationId": "listShortUrls",
+        "summary": "List recent short URLs",
+        "responses": {
+          "200": {
+            "description": "Recent short URLs",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShortUrlListResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "createShortUrl",
+        "summary": "Create a short URL",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateShortUrlRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Short URL created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShortUrlResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid payload"
+          },
+          "409": {
+            "description": "Custom alias is already in use"
+          }
+        }
+      }
+    },
+    "/api/short-urls/{code}": {
+      "get": {
+        "operationId": "getShortUrl",
+        "summary": "Get short URL detail",
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Short URL detail",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShortUrlResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Short URL not found"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "CreateShortUrlRequest": {
+        "type": "object",
+        "required": ["originalUrl"],
+        "properties": {
+          "originalUrl": {
+            "type": "string",
+            "format": "uri",
+            "example": "https://example.com/very/long/path"
+          },
+          "customCode": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 32,
+            "pattern": "^[a-zA-Z0-9_-]{3,32}$",
+            "example": "my-link"
+          },
+          "title": {
+            "type": "string",
+            "maxLength": 160,
+            "example": "Example link"
+          }
+        }
+      },
+      "ShortUrl": {
+        "type": "object",
+        "required": [
+          "id",
+          "code",
+          "originalUrl",
+          "shortUrl",
+          "clickCount",
+          "createdAt",
+          "updatedAt"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "code": {
+            "type": "string"
+          },
+          "originalUrl": {
+            "type": "string",
+            "format": "uri"
+          },
+          "shortUrl": {
+            "type": "string",
+            "format": "uri"
+          },
+          "title": {
+            "type": "string",
+            "nullable": true
+          },
+          "clickCount": {
+            "type": "integer"
+          },
+          "lastClickedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "ShortUrlResponse": {
+        "type": "object",
+        "required": ["data"],
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/ShortUrl"
+          }
+        }
+      },
+      "ShortUrlListResponse": {
+        "type": "object",
+        "required": ["data"],
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ShortUrl"
+            }
+          }
+        }
+      }
+    }
+  }
+}

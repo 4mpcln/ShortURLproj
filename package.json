@@ -1,0 +1,23 @@
+{
+  "name": "shorturlproj",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Short URL developer test project with React, Node.js, PostgreSQL, and Orval.",
+  "workspaces": [
+    "Backend",
+    "Frontend"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run dev:api\" \"npm run dev:web\"",
+    "dev:api": "npm --workspace Backend run dev",
+    "dev:web": "npm --workspace Frontend run dev",
+    "build": "npm run build --workspaces",
+    "lint": "npm run lint --workspaces",
+    "db:up": "docker compose up -d postgres",
+    "db:migrate": "npm --workspace Backend run db:migrate",
+    "generate:api": "npm --workspace Frontend run generate:api"
+  },
+  "devDependencies": {
+    "concurrently": "^9.0.1"
+  }
+}

@@ -1,0 +1,386 @@
+:root {
+  color: #17202a;
+  background: #f5f5f5;
+  font-family:
+    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-synthesis: none;
+  font-weight: 400;
+  text-rendering: optimizeLegibility;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+a {
+  color: inherit;
+}
+
+.animated-gradient {
+  position: relative;
+  isolation: isolate;
+  min-height: 100vh;
+  min-height: 100svh;
+}
+
+.animated-gradient__mist {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    linear-gradient(125deg, transparent 15%, rgb(255 255 255 / 85%) 45%, transparent 75%),
+    linear-gradient(35deg, #ffffff 5%, #c9c9ce 30%, #f7f7f8 50%, #d5d5da 70%, #ffffff 95%);
+  background-size: 240% 240%, 300% 300%;
+  animation: mist-drift 40s linear infinite alternate;
+}
+
+@keyframes mist-drift {
+  from {
+    background-position: 0% 20%, 10% 0%;
+  }
+  to {
+    background-position: 100% 80%, 90% 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animated-gradient__mist {
+    animation: none;
+  }
+}
+
+.app-shell {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 420px;
+  gap: 32px;
+  min-height: calc(100svh - 112px);
+  padding: 42px;
+}
+
+.pending-page {
+  padding: 48px 42px;
+}
+
+.pending-page h1 {
+  margin-bottom: 20px;
+  font-size: 40px;
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  color: #ededed;
+  background: #131313;
+}
+
+[data-theme="dark"] .animated-gradient__mist {
+  background:
+    linear-gradient(125deg, transparent 15%, rgb(85 85 85 / 30%) 45%, transparent 75%),
+    linear-gradient(35deg, #151515 5%, #292929 30%, #191919 50%, #323232 70%, #151515 95%);
+  background-size: 240% 240%, 300% 300%;
+}
+
+:where([data-theme="dark"]) :is(.creator, .result, .link-card, input, button, .row-actions a) {
+  background: #222;
+  border-color: #454545;
+  color: #ededed;
+}
+
+[data-theme="dark"] :is(label, .meta) {
+  color: #d5d5d5;
+}
+
+[data-theme="dark"] :is(.eyebrow, .result span, .status-message, .link-card p, .empty-state) {
+  color: #aaa;
+}
+
+[data-theme="dark"] .link-card a {
+  color: #ff9292;
+}
+
+[data-theme="dark"] .primary-action {
+  background: #db2f2f;
+  border-color: #db2f2f;
+  color: #fff;
+}
+
+.workspace,
+.history {
+  min-width: 0;
+}
+
+.intro {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin-bottom: 28px;
+}
+
+.brand-mark {
+  display: grid;
+  place-items: center;
+  width: 58px;
+  height: 58px;
+  border-radius: 8px;
+  color: #ffffff;
+  background: #db2f2f;
+  box-shadow: 0 18px 36px rgb(219 47 47 / 24%);
+}
+
+.eyebrow {
+  margin: 0 0 6px;
+  color: #677486;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+h1,
+h2,
+h3,
+p {
+  margin-top: 0;
+}
+
+h1,
+h2,
+h3 {
+  font-weight: 500;
+}
+
+h1 {
+  max-width: 760px;
+  margin-bottom: 0;
+  font-size: clamp(2.4rem, 5vw, 4.8rem);
+  line-height: 0.98;
+  letter-spacing: 0;
+}
+
+h2 {
+  margin-bottom: 0;
+  font-size: 1.35rem;
+}
+
+.creator,
+.result,
+.link-card {
+  border: 1px solid #dce3ec;
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 18px 42px rgb(26 36 52 / 8%);
+}
+
+.creator {
+  display: grid;
+  gap: 18px;
+  max-width: 780px;
+  padding: 24px;
+}
+
+label {
+  display: grid;
+  gap: 8px;
+  color: #3e4b5b;
+  font-size: 0.9rem;
+  font-weight: 400;
+}
+
+input {
+  width: 100%;
+  min-height: 48px;
+  border: 1px solid #cfd8e3;
+  border-radius: 6px;
+  padding: 0 14px;
+  color: #17202a;
+  background: #ffffff;
+}
+
+input:focus {
+  border-color: #db2f2f;
+  outline: 3px solid rgb(219 47 47 / 14%);
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(160px, 220px);
+  gap: 16px;
+}
+
+button,
+.row-actions a {
+  display: inline-grid;
+  place-items: center;
+  min-width: 40px;
+  min-height: 40px;
+  border: 1px solid #cfd8e3;
+  border-radius: 6px;
+  color: #17202a;
+  background: #ffffff;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.primary-action {
+  display: inline-flex;
+  justify-content: center;
+  gap: 9px;
+  min-height: 48px;
+  border-color: #db2f2f;
+  color: #ffffff;
+  background: #db2f2f;
+  font-weight: 800;
+}
+
+.result {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 18px;
+  max-width: 780px;
+  margin-top: 18px;
+  padding: 18px 20px;
+}
+
+.result span {
+  display: block;
+  margin-bottom: 6px;
+  color: #677486;
+  font-size: 0.82rem;
+  font-weight: 400;
+}
+
+.result strong {
+  overflow-wrap: anywhere;
+  font-weight: 500;
+}
+
+.row-actions {
+  display: flex;
+  flex-shrink: 0;
+  gap: 8px;
+}
+
+.status-message {
+  margin: 16px 0 0;
+  color: #576579;
+  font-weight: 400;
+}
+
+.history {
+  align-self: start;
+}
+
+.section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.link-list {
+  display: grid;
+  gap: 14px;
+}
+
+.link-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 14px;
+  padding: 16px;
+}
+
+.link-card h3 {
+  margin-bottom: 6px;
+  font-size: 1rem;
+}
+
+.link-card a,
+.link-card p {
+  display: block;
+  overflow: hidden;
+  max-width: 100%;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.link-card a {
+  margin-bottom: 6px;
+  color: #be2525;
+  font-weight: 800;
+}
+
+.link-card p,
+.empty-state {
+  margin-bottom: 0;
+  color: #677486;
+}
+
+.meta {
+  display: grid;
+  justify-items: end;
+  gap: 12px;
+  color: #3e4b5b;
+  font-size: 0.88rem;
+  font-weight: 800;
+}
+
+.spin {
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 920px) {
+  .app-shell {
+    grid-template-columns: 1fr;
+    padding: 24px;
+  }
+}
+
+@media (max-width: 620px) {
+  .app-shell {
+    padding: 18px;
+  }
+
+  .intro,
+  .result {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .form-grid,
+  .link-card {
+    grid-template-columns: 1fr;
+  }
+
+  h1 {
+    font-size: 2.35rem;
+  }
+
+  .meta {
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    justify-items: start;
+  }
+}

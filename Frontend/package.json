@@ -1,0 +1,30 @@
+{
+  "name": "@shorturl/web",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0 --port 3210",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview --host 0.0.0.0 --port 3210",
+    "generate:api": "orval --config orval.config.ts",
+    "lint": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@fontsource/inter": "^5.3.0",
+    "@vitejs/plugin-react": "^4.3.2",
+    "axios": "^1.7.7",
+    "lucide-react": "^0.468.0",
+    "qr-code-styling": "^1.9.2",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.30.6"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.11",
+    "@types/react-dom": "^18.3.1",
+    "orval": "^7.3.0",
+    "typescript": "^5.6.2",
+    "vite": "^5.4.8"
+  }
+}
