@@ -2,6 +2,7 @@ import { customAlphabet } from 'nanoid';
 import { z } from 'zod';
 import { config } from './config.js';
 import { createShortUrl, findByCode } from './shortUrlRepository.js';
+import { metadataShape, validateMetadata } from './linkMetadata.js';
 
 const createCode = customAlphabet(
   '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ',
@@ -9,11 +10,13 @@ const createCode = customAlphabet(
 );
 
 export const createShortUrlSchema = z.object({
-  originalUrl: z.string().url(),
+  originalUrl: z.string().url().refine(value => { try { return ['http:', 'https:'].includes(new URL(value).protocol); } catch { return false; } }, 'Only HTTP and HTTPS URLs are supported.'),
+  ...metadataShape,
   customCode: z
     .string()
     .trim()
     .regex(/^[a-zA-Z0-9_-]{3,32}$/)
+    .refine(value => !['health','api'].includes(value.toLowerCase()), 'This alias is reserved.')
     .optional()
     .or(z.literal('')),
   title: z.string().trim().max(160).optional().or(z.literal('')),
@@ -25,8 +28,9 @@ export function toShortUrl(code: string) {
   return `${config.appBaseUrl}/${code}`;
 }
 
-export async function createUniqueShortUrl(input: CreateShortUrlInput) {
+export async function createUniqueShortUrl(input: CreateShortUrlInput, userId?: string) {
   const parsed = createShortUrlSchema.parse(input);
+  await validateMetadata(parsed, userId);
   const requestedCode = parsed.customCode || undefined;
 
   if (requestedCode) {
@@ -41,6 +45,8 @@ export async function createUniqueShortUrl(input: CreateShortUrlInput) {
       code: requestedCode,
       originalUrl: parsed.originalUrl,
       title: parsed.title || undefined,
+      userId,
+      tagIds: parsed.tagIds, folderId: parsed.folderId, startsAt: parsed.startsAt, expiresAt: parsed.expiresAt,
     });
   }
 
@@ -52,6 +58,8 @@ export async function createUniqueShortUrl(input: CreateShortUrlInput) {
         code,
         originalUrl: parsed.originalUrl,
         title: parsed.title || undefined,
+        userId,
+        tagIds: parsed.tagIds, folderId: parsed.folderId, startsAt: parsed.startsAt, expiresAt: parsed.expiresAt,
       });
     }
   }

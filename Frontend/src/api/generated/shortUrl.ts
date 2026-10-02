@@ -15,7 +15,38 @@ export interface CreateShortUrlRequest {
   customCode?: string;
   /** @maxLength 160 */
   title?: string;
+  tagIds?: string[];
+  /** @nullable */
+  folderId?: string | null;
+  /** @nullable */
+  startsAt?: string | null;
+  /** @nullable */
+  expiresAt?: string | null;
 }
+
+export type ShortUrlKind = typeof ShortUrlKind[keyof typeof ShortUrlKind];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ShortUrlKind = {
+  url: 'url',
+  qr: 'qr',
+} as const;
+
+/**
+ * @nullable
+ */
+export type ShortUrlQrOptions = QrOptions | null;
+
+export type ShortUrlStatus = typeof ShortUrlStatus[keyof typeof ShortUrlStatus];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ShortUrlStatus = {
+  active: 'active',
+  scheduled: 'scheduled',
+  expired: 'expired',
+} as const;
 
 export interface ShortUrl {
   id: string;
@@ -29,6 +60,20 @@ export interface ShortUrl {
   lastClickedAt?: string | null;
   createdAt: string;
   updatedAt: string;
+  kind: ShortUrlKind;
+  /** @nullable */
+  folderId: string | null;
+  /** @nullable */
+  folderName: string | null;
+  /** @nullable */
+  startsAt: string | null;
+  /** @nullable */
+  expiresAt: string | null;
+  isPinned: boolean;
+  tags: Tag[];
+  /** @nullable */
+  qrOptions: ShortUrlQrOptions;
+  status: ShortUrlStatus;
 }
 
 export interface ShortUrlResponse {
@@ -39,19 +84,163 @@ export interface ShortUrlListResponse {
   data: ShortUrl[];
 }
 
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+}
+
+export interface AuthResponse {
+  data: User;
+}
+
+/**
+ * @nullable
+ */
+export type SessionResponseData = User | null;
+
+export interface SessionResponse {
+  /** @nullable */
+  data: SessionResponseData;
+}
+
+export interface LoginRequest {
+  email: string;
+  /** @minLength 1 */
+  password: string;
+}
+
+export interface RegisterRequest {
+  /**
+   * @minLength 1
+   * @maxLength 80
+   */
+  name: string;
+  /** @maxLength 254 */
+  email: string;
+  /**
+   * At most 72 UTF-8 bytes
+   * @minLength 8
+   */
+  password: string;
+}
+
+export interface Tag {
+  id: string;
+  name: string;
+  color: string;
+}
+
+export interface Folder {
+  id: string;
+  name: string;
+}
+
+export type QrOptionsStyle = typeof QrOptionsStyle[keyof typeof QrOptionsStyle];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const QrOptionsStyle = {
+  square: 'square',
+  rounded: 'rounded',
+  dots: 'dots',
+  classy: 'classy',
+} as const;
+
+export type QrOptionsSize = typeof QrOptionsSize[keyof typeof QrOptionsSize];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const QrOptionsSize = {
+  NUMBER_300: 300,
+  NUMBER_600: 600,
+  NUMBER_1000: 1000,
+} as const;
+
+export interface QrOptions {
+  style: QrOptionsStyle;
+  color: string;
+  size: QrOptionsSize;
+}
+
+export interface Organization {
+  tags: Tag[];
+  folders: Folder[];
+}
+
+export interface CreateTag {
+  name: string;
+  color: string;
+}
+
+export interface CreateFolder {
+  name: string;
+}
+
+export interface CreateQr {
+  originalUrl: string;
+  title?: string;
+  qrOptions: QrOptions;
+  tagIds?: string[];
+  /** @nullable */
+  folderId?: string | null;
+  /** @nullable */
+  startsAt?: string | null;
+  /** @nullable */
+  expiresAt?: string | null;
+}
+
+export interface TagResponse {
+  data: Tag;
+}
+
+export interface FolderResponse {
+  data: Folder;
+}
+
+export interface PinRequest {
+  isPinned: boolean;
+}
+
+export interface PinResponse {
+  data: PinRequest;
+}
+
+export type StatisticsResponseDataDailyItem = {
+  date: string;
+  clicks: number;
+};
+
+export type StatisticsResponseData = {
+  item: ShortUrl;
+  daily: StatisticsResponseDataDailyItem[];
+};
+
+export interface StatisticsResponse {
+  data: StatisticsResponseData;
+}
+
+export type GetStatisticsParams = {
+/**
+ * @minimum 1
+ * @maximum 90
+ */
+days?: number;
+};
+
 export const getShortURLAPI = () => {
 /**
  * @summary List recent short URLs
  */
 const listShortUrls = (
-    
+
  ) => {
       return apiClient<ShortUrlListResponse>(
       {url: `/api/short-urls`, method: 'GET'
     },
       );
     }
-  
+
 /**
  * @summary Create a short URL
  */
@@ -65,7 +254,7 @@ const createShortUrl = (
     },
       );
     }
-  
+
 /**
  * @summary Get short URL detail
  */
@@ -77,8 +266,133 @@ const getShortUrl = (
     },
       );
     }
-  
-return {listShortUrls,createShortUrl,getShortUrl}};
+
+const loginUser = (
+    loginRequest: LoginRequest,
+ ) => {
+      return apiClient<AuthResponse>(
+      {url: `/api/auth/login`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: loginRequest
+    },
+      );
+    }
+
+const registerUser = (
+    registerRequest: RegisterRequest,
+ ) => {
+      return apiClient<AuthResponse>(
+      {url: `/api/auth/register`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: registerRequest
+    },
+      );
+    }
+
+const getCurrentUser = (
+
+ ) => {
+      return apiClient<SessionResponse>(
+      {url: `/api/auth/me`, method: 'GET'
+    },
+      );
+    }
+
+const logoutUser = (
+
+ ) => {
+      return apiClient<void>(
+      {url: `/api/auth/logout`, method: 'POST'
+    },
+      );
+    }
+
+const listMyLinks = (
+
+ ) => {
+      return apiClient<ShortUrlListResponse>(
+      {url: `/api/my-links`, method: 'GET'
+    },
+      );
+    }
+
+const getOrganization = (
+
+ ) => {
+      return apiClient<Organization>(
+      {url: `/api/library/organization`, method: 'GET'
+    },
+      );
+    }
+
+const createTag = (
+    createTag: CreateTag,
+ ) => {
+      return apiClient<TagResponse>(
+      {url: `/api/library/tags`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: createTag
+    },
+      );
+    }
+
+const createFolder = (
+    createFolder: CreateFolder,
+ ) => {
+      return apiClient<FolderResponse>(
+      {url: `/api/library/folders`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: createFolder
+    },
+      );
+    }
+
+const saveQr = (
+    createQr: CreateQr,
+ ) => {
+      return apiClient<ShortUrlResponse>(
+      {url: `/api/library/qr`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: createQr
+    },
+      );
+    }
+
+const pinLink = (
+    id: string,
+    pinRequest: PinRequest,
+ ) => {
+      return apiClient<PinResponse>(
+      {url: `/api/library/links/${id}/pin`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: pinRequest
+    },
+      );
+    }
+
+const getStatistics = (
+    id: string,
+    params?: GetStatisticsParams,
+ ) => {
+      return apiClient<StatisticsResponse>(
+      {url: `/api/library/links/${id}/statistics`, method: 'GET',
+        params
+    },
+      );
+    }
+
+return {listShortUrls,createShortUrl,getShortUrl,loginUser,registerUser,getCurrentUser,logoutUser,listMyLinks,getOrganization,createTag,createFolder,saveQr,pinLink,getStatistics}};
 export type ListShortUrlsResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getShortURLAPI>['listShortUrls']>>>
 export type CreateShortUrlResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getShortURLAPI>['createShortUrl']>>>
 export type GetShortUrlResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getShortURLAPI>['getShortUrl']>>>
+export type LoginUserResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getShortURLAPI>['loginUser']>>>
+export type RegisterUserResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getShortURLAPI>['registerUser']>>>
+export type GetCurrentUserResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getShortURLAPI>['getCurrentUser']>>>
+export type LogoutUserResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getShortURLAPI>['logoutUser']>>>
+export type ListMyLinksResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getShortURLAPI>['listMyLinks']>>>
+export type GetOrganizationResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getShortURLAPI>['getOrganization']>>>
+export type CreateTagResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getShortURLAPI>['createTag']>>>
+export type CreateFolderResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getShortURLAPI>['createFolder']>>>
+export type SaveQrResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getShortURLAPI>['saveQr']>>>
+export type PinLinkResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getShortURLAPI>['pinLink']>>>
+export type GetStatisticsResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getShortURLAPI>['getStatistics']>>>

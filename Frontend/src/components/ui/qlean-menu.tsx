@@ -1,5 +1,6 @@
-import { Link2, Moon, QrCode, Sun } from 'lucide-react';
-import type { ReactNode } from 'react';
+import { Library, Link2, LogOut, Moon, QrCode, Sun } from 'lucide-react';
+import { useState, type ReactNode } from 'react';
+import { useAuth } from '../../auth/AuthContext';
 import { Link, NavLink } from 'react-router-dom';
 import './qlean-menu.css';
 
@@ -12,6 +13,9 @@ type QleanMenuProps = {
 };
 
 export function QleanMenu({ logo, theme, onThemeChange }: QleanMenuProps) {
+  const { user, loading, openAuth, logout } = useAuth();
+  const [loggingOut, setLoggingOut] = useState(false);
+  const [logoutError, setLogoutError] = useState(false);
   const themeLabel = theme === 'dark' ? 'Switch to day mode' : 'Switch to night mode';
 
   return (
@@ -31,6 +35,7 @@ export function QleanMenu({ logo, theme, onThemeChange }: QleanMenuProps) {
             <QrCode size={18} aria-hidden="true" />
             QR Maker
           </NavLink>
+          {user && <NavLink to="/my-links"><Library size={18} aria-hidden="true" />My library</NavLink>}
         </div>
 
         <div className="qlean-menu__actions">
@@ -43,8 +48,17 @@ export function QleanMenu({ logo, theme, onThemeChange }: QleanMenuProps) {
           >
             {theme === 'dark' ? <Sun size={20} aria-hidden="true" /> : <Moon size={20} aria-hidden="true" />}
           </button>
-          <NavLink className="qlean-register" to="/register">Register</NavLink>
-          <NavLink className="qlean-login" to="/login">Log in</NavLink>
+          {user ? <>
+            <span className="qlean-user-name" title={user.name}>{user.name}</span>
+            <button className="qlean-theme" type="button" disabled={loggingOut} aria-label="Log out" title={logoutError ? 'Could not log out. Try again.' : `Log out ${user.name}`} onClick={async () => {
+              setLoggingOut(true); setLogoutError(false);
+              try { await logout(); } catch { setLogoutError(true); } finally { setLoggingOut(false); }
+            }}><LogOut size={18} aria-hidden="true" /></button>
+            {logoutError && <span className="sr-only" role="alert">Could not log out. Try again.</span>}
+          </> : <>
+            <button className="qlean-register" type="button" disabled={loading} onClick={() => openAuth('register')}>Register</button>
+            <button className="qlean-login" type="button" disabled={loading} onClick={() => openAuth('login')}>Log in</button>
+          </>}
         </div>
       </nav>
     </header>

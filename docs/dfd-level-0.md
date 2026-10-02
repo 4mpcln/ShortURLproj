@@ -15,7 +15,18 @@ flowchart LR
   API -->|Generated short URL| Web
   Web -->|Display and copy short URL| User
 
+  User -->|Register or log in, or continue as guest| Web
+  Web -->|Account credentials| API
+  API -->|Verify bcrypt password hash and store users| DB
+  API -->|JWT session in HttpOnly cookie| Web
+  Web -->|Save member URL/QR, tags, folder and schedule| API
+  API -->|Validate ownership and save metadata| DB
+  Web -->|View library, pin items or request statistics| API
+  API -->|Load only current user items and daily logs| DB
+  API -->|Member URL/QR library and statistics| Web
+
   User -->|Open short URL| API
-  API -->|Find code and update click count| DB
-  API -->|302 Redirect| Target
+  API -->|Check access schedule, count visit and log time| DB
+  API -->|302 Redirect for URL, text/plain for text QR| Target
+  API -->|403 scheduled or 410 expired| User
 ```

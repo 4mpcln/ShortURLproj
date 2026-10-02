@@ -1,0 +1,20 @@
+.organization { border: 0; padding: 0; margin: 24px 0; min-width: 0; display: grid; gap: 18px; color: inherit; }
+.organization legend { font-size: 16px; font-weight: 500; margin-bottom: 14px; }
+.organization label, .organization-tags { display: grid; gap: 9px; font-size: 14px; }
+.organization input, .organization select { min-width: 0; width: 100%; box-sizing: border-box; padding: 12px; border: 1px solid #ffffff30; border-radius: 8px; background: #ffffff08; color: inherit; font: inherit; color-scheme: dark; }
+.organization select option { background: #222; color: white; }
+.organization button { display: inline-flex; gap: 7px; align-items: center; justify-content: center; border: 1px solid #ffffff30; border-radius: 7px; padding: 9px 12px; background: #ffffff08; color: inherit; font: inherit; cursor: pointer; }
+.organization button:disabled { opacity: .45; cursor: not-allowed; }
+.organization button[aria-pressed=true] { border-color: currentColor; background: #ffffff20; }
+.tag-options { display: flex; flex-wrap: wrap; gap: 8px; }
+.tag-options i, .library-tag i { width: 10px; height: 10px; flex-shrink: 0; border-radius: 50%; }
+.organization-editor { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.organization-editor > input:not([type=color]) { flex: 1; min-width: 130px; }
+.organization-editor > input[type=color] { width: 42px; height: 42px; padding: 4px; }
+.organization-folder > div { display: flex; gap: 8px; }
+.organization-schedule { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 16px; }
+.organization p { font-size: 13px; color: #f39898; margin: 0; }
+:root[data-theme=light] .organization input, :root[data-theme=light] .organization select, :root[data-theme=light] .organization button { background: #ffffff60; border-color: #0003; color-scheme: light; }
+:root[data-theme=light] .organization button[aria-pressed=true] { border-color: #333; background: #ffffffb0; }
+:root[data-theme=light] .organization option { background: white; color: #222; }
+@media(max-width:520px) { .organization-schedule { grid-template-columns: minmax(0,1fr); } }

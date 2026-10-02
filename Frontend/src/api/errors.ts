@@ -23,7 +23,7 @@ export function getCreateShortUrlError(error: unknown): string {
     if (field === 'originalUrl') return 'Enter a valid URL, including https:// or http://.';
     if (field === 'customCode') return 'Custom alias must contain 3–32 letters, numbers, hyphens or underscores.';
     if (field === 'title') return 'Title must be no longer than 160 characters.';
-    return 'Check the URL, title and custom alias, then try again.';
+    return error.response.data?.message === 'Invalid request payload.' ? 'Check the URL, title, alias and access times.' : error.response.data?.message || 'Check the form and try again.';
   }
 
   return 'The server could not create your short URL. Please try again shortly.';

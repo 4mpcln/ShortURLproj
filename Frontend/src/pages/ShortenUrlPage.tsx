@@ -3,6 +3,8 @@ import { FormEvent, useEffect, useMemo, useState } from 'react';
 import '../styles/shortenurl.css';
 import { getCreateShortUrlError } from '../api/errors';
 import { HelpTooltip } from '../components/ui/help-tooltip';
+import { useAuth } from '../auth/AuthContext';
+import { LinkOrganization, emptyMetadata, metadataPayload } from '../components/LinkOrganization';
 import {
   CreateShortUrlRequest,
   ShortUrl,
@@ -18,6 +20,8 @@ const initialForm: FormState = {
 };
 
 export function ShortenUrlPage() {
+  const { user } = useAuth();
+  const [metadata, setMetadata] = useState(emptyMetadata);
   const [phase, setPhase] = useState<'collapsed' | 'opening' | 'expanded' | 'closing'>('collapsed');
   const [hasOpened, setHasOpened] = useState(false);
   const expanded = phase === 'expanded' || phase === 'closing';
@@ -26,6 +30,7 @@ export function ShortenUrlPage() {
   const [latest, setLatest] = useState<ShortUrl | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState('');
+  useEffect(() => { setMetadata(emptyMetadata); setLatest(null); }, [user?.id]);
 
   useEffect(() => {
     if (!transitioning) return;
@@ -46,6 +51,7 @@ export function ShortenUrlPage() {
 
     try {
       const payload = {
+        ...(user && expanded ? metadataPayload(metadata) : {}),
         originalUrl: form.originalUrl.trim(),
         title: expanded ? form.title?.trim() || undefined : undefined,
         customCode: expanded ? form.customCode?.trim() || undefined : undefined,
@@ -53,6 +59,7 @@ export function ShortenUrlPage() {
       const response = await createShortUrl(payload);
       setLatest(response.data);
       setForm(initialForm);
+      setMetadata(emptyMetadata);
     } catch (error) {
       setMessage(getCreateShortUrlError(error));
     } finally {
@@ -117,7 +124,7 @@ export function ShortenUrlPage() {
             <div className="alias-field">
               <div className="alias-field__heading">
                 <label htmlFor="custom-alias">Custom alias</label>
-                <HelpTooltip label="What is a custom alias?" text="ชื่อท้ายลิงก์ที่ตั้งเอง เช่น my-link ใน shorturl.at/my-link" />
+                <HelpTooltip label="What is a custom alias?" text="ชื่อท้ายลิงก์ที่ตั้งเอง เช่น my-link ใน /my-link" />
               </div>
               <input
                 id="custom-alias"
@@ -133,6 +140,7 @@ export function ShortenUrlPage() {
             </div>
           </div>
 
+          {user && <LinkOrganization value={metadata} onChange={setMetadata} disabled={!expanded || isSubmitting} />}
           <button className="shorten-submit shorten-submit--bottom" type="submit" disabled={!canSubmit || transitioning}>
             {isSubmitting ? 'Shortening...' : 'Shorten URL'}
             <ArrowRight size={22} aria-hidden="true" />

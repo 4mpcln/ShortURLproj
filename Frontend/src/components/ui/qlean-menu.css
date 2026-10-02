@@ -73,9 +73,12 @@
 .qlean-menu__actions {
   justify-self: end;
 }
+.qlean-user-name { max-width: 110px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; }
 
 .qlean-menu__pages a,
-.qlean-menu__actions a {
+.qlean-menu__actions a,
+.qlean-menu__actions .qlean-register,
+.qlean-menu__actions .qlean-login {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -167,12 +170,14 @@
     padding: 0 16px;
   }
 
-  .qlean-menu__actions a {
+  .qlean-menu__actions a,
+  .qlean-menu__actions .qlean-register,
+  .qlean-menu__actions .qlean-login {
     padding: 0 14px;
   }
 }
 
-@media (max-width: 760px) {
+@media (max-width: 950px) {
   .qlean-header {
     padding: 18px 18px 0;
   }
@@ -189,6 +194,9 @@
 
   .qlean-menu__pages a {
     flex: 1;
+    padding: 0 9px;
+    font-size: 12px;
+    gap: 5px;
   }
 
   .qlean-brand {
@@ -206,7 +214,9 @@
     gap: 6px;
   }
 
-  .qlean-menu__actions a {
+  .qlean-menu__actions a,
+  .qlean-menu__actions .qlean-register,
+  .qlean-menu__actions .qlean-login {
     padding: 0 10px;
     font-size: 13px;
     height: 40px;
@@ -220,6 +230,9 @@
 }
 
 @media (max-width: 380px) {
+  .qlean-menu__pages { gap: 5px; }
+  .qlean-menu__pages a { padding: 0 5px; font-size: 11px; }
+  .qlean-menu__pages svg { width: 14px; }
   .qlean-menu {
     padding: 12px 10px;
     gap: 10px;

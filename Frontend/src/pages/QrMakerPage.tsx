@@ -1,7 +1,11 @@
-import { Check, Download, Link2, QrCode } from 'lucide-react';
+import { Check, Download, Link2, QrCode, Save } from 'lucide-react';
 import QRCodeStyling, { type DotType } from 'qr-code-styling';
 import { useEffect, useRef, useState } from 'react';
 import '../styles/qr-maker.css';
+import { useAuth } from '../auth/AuthContext';
+import { getShortURLAPI, type ShortUrl, type QrOptionsStyle } from '../api/generated/shortUrl';
+import { LinkOrganization, emptyMetadata, metadataPayload, libraryError } from '../components/LinkOrganization';
+import { createQrCode } from '../lib/qrCode';
 
 const styles: { name: string; type: DotType }[] = [
   { name: 'Classic', type: 'square' },
@@ -22,6 +26,12 @@ const colors = [
 ];
 
 export function QrMakerPage() {
+  const { user } = useAuth();
+  const [metadata, setMetadata] = useState(emptyMetadata);
+  const [title, setTitle] = useState('');
+  const [saved, setSaved] = useState<ShortUrl | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState('');
   const [content, setContent] = useState('');
   const [style, setStyle] = useState<DotType>('square');
   const [color, setColor] = useState('#161616');
@@ -31,6 +41,18 @@ export function QrMakerPage() {
   const [error, setError] = useState('');
   const preview = useRef<HTMLDivElement>(null);
   const qrCode = useRef<QRCodeStyling | null>(null);
+  useEffect(() => { setSaved(null); setMetadata(emptyMetadata); setSaveError(''); }, [user?.id]);
+  useEffect(() => { setSaved(null); setSaveError(''); }, [content, style, color, size, metadata, title]);
+  const encodedContent = saved?.shortUrl || content;
+  async function saveQr() {
+    if (saving || !content.trim()) return;
+    if (metadata.startsAt && metadata.expiresAt && metadata.startsAt >= metadata.expiresAt) { setSaveError('Closing time must be after opening time.'); return; }
+    setSaving(true); setSaveError('');
+    try {
+      const response = await getShortURLAPI().saveQr({ originalUrl: content.trim(), title: title.trim(), ...metadataPayload(metadata), qrOptions: { style: style as QrOptionsStyle, color, size: size as 300 | 600 | 1000 } });
+      setReady(false); setSaved(response.data);
+    } catch (err) { setSaveError(libraryError(err)); } finally { setSaving(false); }
+  }
 
   useEffect(() => {
     let cancelled = false;
@@ -38,24 +60,11 @@ export function QrMakerPage() {
     setError('');
     qrCode.current = null;
     preview.current?.replaceChildren();
-    if (!content.trim()) return;
+    if (!encodedContent.trim()) return;
 
     const timer = window.setTimeout(async () => {
       try {
-        // The bundled encoder accepts byte strings; encode Unicode as UTF-8 first.
-        const data = Array.from(new TextEncoder().encode(content.trim()), byte => String.fromCharCode(byte)).join('');
-        const qr = new QRCodeStyling({
-          width: size,
-          height: size,
-          type: 'canvas',
-          data,
-          margin: Math.round(size * 0.08),
-          qrOptions: { errorCorrectionLevel: 'H', mode: 'Byte' },
-          dotsOptions: { type: style, color },
-          cornersSquareOptions: { type: style === 'square' ? 'square' : 'extra-rounded', color },
-          cornersDotOptions: { type: style === 'dots' ? 'dot' : 'square', color },
-          backgroundOptions: { color: color === '#ffffff' ? '#161616' : '#ffffff' },
-        });
+        const qr = createQrCode(encodedContent, { size, style, color });
         // Wait for drawing to finish before exposing the preview or download.
         await qr.getRawData('png');
         if (cancelled || !preview.current) return;
@@ -68,7 +77,7 @@ export function QrMakerPage() {
     }, 200);
 
     return () => { cancelled = true; window.clearTimeout(timer); };
-  }, [content, style, color, size]);
+  }, [encodedContent, style, color, size]);
 
   async function downloadQr() {
     if (!content.trim() || !ready || !qrCode.current || downloading) return;
@@ -92,7 +101,7 @@ export function QrMakerPage() {
       <section className="qr-maker" aria-labelledby="qr-maker-title">
         <h2 id="qr-maker-title">Create a QR Code</h2>
         <div className="qr-maker__layout">
-          <div className="qr-controls">
+          <fieldset className="qr-controls qr-controls-fieldset" disabled={saving}>
             <div className="qr-content-input">
               <Link2 size={24} aria-hidden="true" />
               <input
@@ -148,7 +157,8 @@ export function QrMakerPage() {
                 <option value={1000}>1000 × 1000 px</option>
               </select>
             </div>
-          </div>
+            {user && <><label className="qr-size-label">Title<input maxLength={160} value={title} onChange={event => setTitle(event.target.value)} placeholder="Campaign, document, or note" /></label><LinkOrganization value={metadata} onChange={setMetadata} disabled={saving} /></>}
+          </fieldset>
 
           <div className="qr-output">
             <div className="qr-preview" aria-label="QR code preview" aria-busy={Boolean(content.trim()) && !ready && !error}>
@@ -158,11 +168,14 @@ export function QrMakerPage() {
                 <span>{error ? 'QR code unavailable' : content.trim() ? 'Generating...' : 'QR preview'}</span>
               </div>}
             </div>
-            <button className="qr-download" type="button" disabled={!content.trim() || !ready || downloading} onClick={downloadQr}>
+            {user && <button className="qr-download" type="button" disabled={!content.trim() || saving || Boolean(saved)} onClick={saveQr}><Save size={20} />{saving ? 'Saving...' : saved ? 'Saved to My library' : 'Save QR'}</button>}
+            {saved && <p className="qr-saved-link">{saved.shortUrl}</p>}
+            <button className="qr-download" type="button" disabled={!content.trim() || !ready || downloading || saving || Boolean(user && !saved)} onClick={downloadQr}>
               <Download size={20} aria-hidden="true" />
               {downloading ? 'Downloading...' : 'Download QR Code'}
             </button>
             {error && <p className="qr-error" role="alert">{error}</p>}
+            {saveError && <p className="qr-error" role="alert">{saveError}</p>}
           </div>
         </div>
       </section>
