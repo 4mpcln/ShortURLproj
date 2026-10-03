@@ -1,0 +1,16 @@
+.shared-modal { box-sizing: border-box; width: min(420px, calc(100% - 32px)); max-height: calc(100svh - 32px); padding: 0; border: 1px solid #46464c; border-radius: 8px; background: #202023; color: #f5f5f7; font: inherit; box-shadow: 0 24px 80px #0006; }
+.shared-modal::backdrop { background: #0008; backdrop-filter: blur(5px); }
+.shared-modal header { display: flex; align-items: center; justify-content: space-between; padding: 18px 20px; border-bottom: 1px solid #8883; gap: 12px; }
+.shared-modal h2 { margin: 0; font-size: 19px; font-weight: 600; }
+.shared-modal__body { padding: 20px; }
+.shared-modal button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 40px; padding: 8px 14px; border: 1px solid #8886; border-radius: 6px; background: transparent; color: inherit; font: inherit; font-size: 14px; cursor: pointer; }
+.shared-modal .shared-modal__close { width: 36px; min-height: 36px; padding: 0; border: 0; }
+.shared-modal button:disabled { opacity: .5; cursor: not-allowed; }
+.shared-modal label { display: grid; gap: 8px; font-size: 14px; }
+.shared-modal input { box-sizing: border-box; width: 100%; min-width: 0; padding: 12px; border: 1px solid #8886; border-radius: 6px; background: transparent; color: inherit; font: inherit; }
+.shared-modal input:focus-visible, .shared-modal button:focus-visible { outline: 2px solid #35aa95; outline-offset: 2px; }
+.shared-modal footer { display: flex; justify-content: flex-end; gap: 8px; margin-top: 24px; }
+.shared-modal .shared-modal__primary { background: #197d6b; border-color: #197d6b; color: white; }
+.shared-modal p[role=alert] { font-size: 13px; color: #f39898; overflow-wrap: anywhere; }
+[data-theme=light] .shared-modal { background: #fff; color: #242428; border-color: #d8d8dc; }
+[data-theme=light] .shared-modal p[role=alert] { color: #b52336; }

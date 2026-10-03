@@ -1,0 +1,87 @@
+.qlean-logo {
+  --logo-ink: #f97316;
+  --logo-wordmark: var(--logo-ink);
+  --logo-mark-size: 48px;
+  --logo-wordmark-size: 29px;
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 4px;
+  width: 148px;
+  height: var(--logo-mark-size);
+  flex-shrink: 0;
+}
+
+[data-theme=dark] .qlean-logo { --logo-wordmark: var(--logo-ink); }
+
+.qlean-logo__mark { display: block; width: var(--logo-mark-size); height: var(--logo-mark-size); flex-shrink: 0; overflow: hidden; }
+.qlean-logo__body, .qlean-logo__pupil { fill: var(--logo-ink); }
+.qlean-logo__eye { fill: #fff; }
+.qlean-logo__mouth { fill: none; stroke: #fff; stroke-width: 4; stroke-linecap: round; }
+.qlean-logo__pupil, .qlean-logo__mouth { transition: transform 360ms cubic-bezier(.22, 1, .36, 1); }
+
+.qlean-logo__wordmark-window { display: block; flex: 1; min-width: 0; overflow: hidden; padding-bottom: 6px; }
+.qlean-logo__wordmark {
+  display: block;
+  color: var(--logo-wordmark);
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+  font-size: var(--logo-wordmark-size);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: 0;
+  white-space: nowrap;
+  opacity: 0;
+  transform: translateX(-105%);
+  transition: transform 420ms cubic-bezier(.22, 1, .36, 1), opacity 200ms ease;
+}
+
+.qlean-logo--inline .qlean-logo__wordmark,
+.auth-modal .qlean-logo__wordmark,
+.link-availability-modal .qlean-logo__wordmark { transform: translateX(0); opacity: 1; }
+
+.qlean-brand:focus-visible .qlean-logo__mouth { transform: translateX(-24px); }
+.qlean-brand:focus-visible .qlean-logo__pupil { transform: translateY(-30px); }
+.qlean-brand:focus-visible .qlean-logo__wordmark { transform: translateX(0); opacity: 1; }
+
+@media (hover: hover) and (pointer: fine) {
+  .qlean-brand:hover .qlean-logo__mouth { transform: translateX(-24px); }
+  .qlean-brand:hover .qlean-logo__pupil { transform: translateY(-30px); }
+  .qlean-brand:hover .qlean-logo__wordmark { transform: translateX(0); opacity: 1; }
+}
+
+@media (max-width: 950px) {
+  .qlean-logo { --logo-mark-size: 40px; --logo-wordmark-size: 24px; width: 124px; }
+  .qlean-logo__wordmark-window { padding-bottom: 5px; }
+}
+
+@media (max-width: 480px) {
+  .qlean-logo { --logo-mark-size: 32px; --logo-wordmark-size: 20px; width: 100px; }
+  .qlean-logo__wordmark-window { padding-bottom: 4px; }
+}
+
+@media (max-width: 380px) {
+  .qlean-logo { --logo-mark-size: 26px; --logo-wordmark-size: 14px; width: 64px; gap: 2px; }
+  .qlean-logo__wordmark-window { padding-bottom: 3px; }
+}
+
+.qlean-logo--compact {
+  --logo-mark-size: 34px;
+  --logo-wordmark-size: 20px;
+  width: 108px;
+}
+
+.qlean-logo--compact .qlean-logo__wordmark-window { padding-bottom: 4px; }
+
+.qlean-logo--inline {
+  --logo-mark-size: 20px;
+  --logo-wordmark-size: 12px;
+  width: 62px;
+  height: 20px;
+  gap: 2px;
+  vertical-align: text-bottom;
+}
+
+.qlean-logo--inline .qlean-logo__wordmark-window { padding-bottom: 2px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .qlean-logo__pupil, .qlean-logo__mouth, .qlean-logo__wordmark { transition: none; }
+}

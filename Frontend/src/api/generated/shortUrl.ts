@@ -46,6 +46,7 @@ export const ShortUrlStatus = {
   active: 'active',
   scheduled: 'scheduled',
   expired: 'expired',
+  disabled: 'disabled',
 } as const;
 
 export interface ShortUrl {
@@ -70,6 +71,7 @@ export interface ShortUrl {
   /** @nullable */
   expiresAt: string | null;
   isPinned: boolean;
+  isEnabled: boolean;
   tags: Tag[];
   /** @nullable */
   qrOptions: ShortUrlQrOptions;
@@ -78,6 +80,28 @@ export interface ShortUrl {
 
 export interface ShortUrlResponse {
   data: ShortUrl;
+}
+
+export type LinkAccessResponseDataStatus = typeof LinkAccessResponseDataStatus[keyof typeof LinkAccessResponseDataStatus];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const LinkAccessResponseDataStatus = {
+  active: 'active',
+  scheduled: 'scheduled',
+  expired: 'expired',
+  disabled: 'disabled',
+} as const;
+
+export type LinkAccessResponseData = {
+  status: LinkAccessResponseDataStatus;
+  /** @nullable */
+  startsAt: string | null;
+  shortUrl: string;
+};
+
+export interface LinkAccessResponse {
+  data: LinkAccessResponseData;
 }
 
 export interface ShortUrlListResponse {
@@ -198,6 +222,26 @@ export interface FolderResponse {
   data: Folder;
 }
 
+export interface UpdateLink {
+  /**
+   * HTTP/HTTPS URL for URL items; up to 1000 characters for QR content
+   * @minLength 1
+   */
+  originalUrl?: string;
+  /** @maxLength 160 */
+  title?: string;
+  /** Temporarily enable or disable access without changing the schedule */
+  isEnabled?: boolean;
+  /** @maxItems 20 */
+  tagIds?: string[];
+  /** @nullable */
+  folderId?: string | null;
+  /** @nullable */
+  startsAt?: string | null;
+  /** @nullable */
+  expiresAt?: string | null;
+}
+
 export interface PinRequest {
   isPinned: boolean;
 }
@@ -212,6 +256,7 @@ export type StatisticsResponseDataDailyItem = {
 };
 
 export type StatisticsResponseData = {
+  cacheExpiresAt?: string;
   item: ShortUrl;
   daily: StatisticsResponseDataDailyItem[];
 };
@@ -226,6 +271,8 @@ export type GetStatisticsParams = {
  * @maximum 90
  */
 days?: number;
+startDate?: string;
+endDate?: string;
 };
 
 export const getShortURLAPI = () => {
@@ -263,6 +310,18 @@ const getShortUrl = (
  ) => {
       return apiClient<ShortUrlResponse>(
       {url: `/api/short-urls/${code}`, method: 'GET'
+    },
+      );
+    }
+
+/**
+ * @summary Check link availability without recording a visit
+ */
+const getLinkAccess = (
+    code: string,
+ ) => {
+      return apiClient<LinkAccessResponse>(
+      {url: `/api/short-urls/${code}/access`, method: 'GET'
     },
       );
     }
@@ -358,6 +417,33 @@ const saveQr = (
       );
     }
 
+/**
+ * @summary Edit an owned link without changing its alias or statistics
+ */
+const updateLink = (
+    id: string,
+    updateLink: UpdateLink,
+ ) => {
+      return apiClient<ShortUrlResponse>(
+      {url: `/api/library/links/${id}`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: updateLink
+    },
+      );
+    }
+
+/**
+ * @summary Permanently delete an owned link and its visit logs
+ */
+const deleteLink = (
+    id: string,
+ ) => {
+      return apiClient<void>(
+      {url: `/api/library/links/${id}`, method: 'DELETE'
+    },
+      );
+    }
+
 const pinLink = (
     id: string,
     pinRequest: PinRequest,
@@ -381,10 +467,11 @@ const getStatistics = (
       );
     }
 
-return {listShortUrls,createShortUrl,getShortUrl,loginUser,registerUser,getCurrentUser,logoutUser,listMyLinks,getOrganization,createTag,createFolder,saveQr,pinLink,getStatistics}};
+return {listShortUrls,createShortUrl,getShortUrl,getLinkAccess,loginUser,registerUser,getCurrentUser,logoutUser,listMyLinks,getOrganization,createTag,createFolder,saveQr,updateLink,deleteLink,pinLink,getStatistics}};
 export type ListShortUrlsResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getShortURLAPI>['listShortUrls']>>>
 export type CreateShortUrlResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getShortURLAPI>['createShortUrl']>>>
 export type GetShortUrlResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getShortURLAPI>['getShortUrl']>>>
+export type GetLinkAccessResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getShortURLAPI>['getLinkAccess']>>>
 export type LoginUserResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getShortURLAPI>['loginUser']>>>
 export type RegisterUserResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getShortURLAPI>['registerUser']>>>
 export type GetCurrentUserResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getShortURLAPI>['getCurrentUser']>>>
@@ -394,5 +481,7 @@ export type GetOrganizationResult = NonNullable<Awaited<ReturnType<ReturnType<ty
 export type CreateTagResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getShortURLAPI>['createTag']>>>
 export type CreateFolderResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getShortURLAPI>['createFolder']>>>
 export type SaveQrResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getShortURLAPI>['saveQr']>>>
+export type UpdateLinkResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getShortURLAPI>['updateLink']>>>
+export type DeleteLinkResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getShortURLAPI>['deleteLink']>>>
 export type PinLinkResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getShortURLAPI>['pinLink']>>>
 export type GetStatisticsResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getShortURLAPI>['getStatistics']>>>

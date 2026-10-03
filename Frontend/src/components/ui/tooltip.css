@@ -1,0 +1,2 @@
+.ui-tooltip { display: inline-flex; align-items: center; min-width: 0; max-width: 100%; vertical-align: middle; }
+.ui-tooltip__content { position: fixed; z-index: 1100; width: max-content; max-width: min(280px, calc(100vw - 16px)); box-sizing: border-box; padding: 7px 10px; border: 1px solid #ffffff40; border-radius: 5px; background: #242426; color: #fff; box-shadow: 0 4px 14px #0003; font-family: Inter, ui-sans-serif, system-ui, sans-serif; font-size: 12px; font-weight: 400; line-height: 1.5; text-align: left; letter-spacing: 0; overflow-wrap: anywhere; }

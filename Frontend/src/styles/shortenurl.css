@@ -127,6 +127,10 @@
 [data-phase="closing"] .shorten-submit--bottom { animation: submit-exit-left 260ms ease both; }
 .shorten-page .result { max-width: none; }
 .shorten-page .result > div:first-child { min-width: 0; }
+.recent-links { margin-top: 28px; }
+.recent-links h2 { margin-bottom: 14px; font-size: 18px; }
+.recent-links-list { display: grid; gap: 12px; margin: 0; padding: 0; list-style: none; }
+.recent-links-list .result { margin: 0; }
 .result-destination { margin-top: 16px; }
 .result-destination a { display: block; overflow-wrap: anywhere; line-height: 1.5; font-size: 14px; }
 

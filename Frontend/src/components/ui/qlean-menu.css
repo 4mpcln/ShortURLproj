@@ -51,18 +51,6 @@
   text-decoration: none;
 }
 
-.qlean-logo {
-  display: grid;
-  place-items: center;
-  width: 38px;
-  height: 38px;
-  border: 1px solid #777;
-  border-radius: 50%;
-  font-size: 24px;
-  color: var(--menu-selected-text);
-  background: var(--menu-selected);
-}
-
 .qlean-menu__pages,
 .qlean-menu__actions {
   display: flex;
@@ -107,7 +95,7 @@
   border-color: var(--menu-selected);
 }
 
-.qlean-menu a:hover {
+.qlean-menu a:not(.qlean-brand):hover {
   background: var(--menu-hover);
   color: var(--menu-hover-text);
 }
@@ -121,6 +109,18 @@
   background: var(--menu-button);
   color: var(--menu-button-text);
 }
+
+.qlean-menu .qlean-logout {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: auto;
+  padding: 0 12px;
+  border-radius: 999px;
+}
+
+.qlean-logout svg { flex-shrink: 0; }
 
 .qlean-menu :focus-visible {
   outline: 2px solid var(--menu-text);
@@ -204,12 +204,6 @@
     font-size: 21px;
   }
 
-  .qlean-logo {
-    width: 30px;
-    height: 30px;
-    font-size: 20px;
-  }
-
   .qlean-menu__actions {
     gap: 6px;
   }
@@ -227,9 +221,13 @@
     height: 40px;
     min-width: 40px;
   }
+
+  .qlean-menu .qlean-logout { width: auto; }
+  .qlean-logout .qlean-user-name { max-width: 80px; }
 }
 
 @media (max-width: 380px) {
+  .qlean-logout .qlean-user-name { max-width: 64px; }
   .qlean-menu__pages { gap: 5px; }
   .qlean-menu__pages a { padding: 0 5px; font-size: 11px; }
   .qlean-menu__pages svg { width: 14px; }
@@ -238,7 +236,4 @@
     gap: 10px;
   }
 
-  .qlean-logo {
-    display: none;
-  }
 }

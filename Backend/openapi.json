@@ -91,6 +91,31 @@
         }
       }
     },
+    "/api/short-urls/{code}/access": {
+      "get": {
+        "operationId": "getLinkAccess",
+        "summary": "Check link availability without recording a visit",
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Public availability without destination or account metadata",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/LinkAccessResponse" }
+              }
+            }
+          },
+          "404": { "description": "Short URL not found" }
+        }
+      }
+    },
     "/api/auth/login": {
       "post": {
         "operationId": "loginUser",
@@ -371,6 +396,34 @@
         }
       }
     },
+    "/api/library/links/{id}": {
+      "patch": {
+        "operationId": "updateLink",
+        "summary": "Edit an owned link without changing its alias or statistics",
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/UpdateLink" } } }
+        },
+        "responses": {
+          "200": { "description": "Updated link", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ShortUrlResponse" } } } },
+          "400": { "description": "Invalid content, schedule or organization" },
+          "401": { "description": "Login required" },
+          "404": { "description": "Item not found" }
+        }
+      },
+      "delete": {
+        "operationId": "deleteLink",
+        "summary": "Permanently delete an owned link and its visit logs",
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }],
+        "responses": {
+          "204": { "description": "Deleted" },
+          "400": { "description": "Invalid ID" },
+          "401": { "description": "Login required" },
+          "404": { "description": "Item not found" }
+        }
+      }
+    },
     "/api/library/links/{id}/pin": {
       "patch": {
         "operationId": "pinLink",
@@ -533,6 +586,7 @@
           "startsAt",
           "expiresAt",
           "isPinned",
+          "isEnabled",
           "tags",
           "qrOptions",
           "status"
@@ -601,6 +655,9 @@
           "isPinned": {
             "type": "boolean"
           },
+          "isEnabled": {
+            "type": "boolean"
+          },
           "tags": {
             "type": "array",
             "items": {
@@ -618,7 +675,8 @@
             "enum": [
               "active",
               "scheduled",
-              "expired"
+              "expired",
+              "disabled"
             ]
           }
         }
@@ -631,6 +689,21 @@
         "properties": {
           "data": {
             "$ref": "#/components/schemas/ShortUrl"
+          }
+        }
+      },
+      "LinkAccessResponse": {
+        "type": "object",
+        "required": ["data"],
+        "properties": {
+          "data": {
+            "type": "object",
+            "required": ["status", "startsAt", "shortUrl"],
+            "properties": {
+              "status": { "type": "string", "enum": ["active", "scheduled", "expired", "disabled"] },
+              "startsAt": { "type": "string", "format": "date-time", "nullable": true },
+              "shortUrl": { "type": "string", "format": "uri" }
+            }
           }
         }
       },
@@ -910,6 +983,20 @@
           }
         }
       },
+      "UpdateLink": {
+        "type": "object",
+        "additionalProperties": false,
+        "minProperties": 1,
+        "properties": {
+          "originalUrl": { "type": "string", "minLength": 1, "description": "HTTP/HTTPS URL for URL items; up to 1000 characters for QR content" },
+          "title": { "type": "string", "maxLength": 160 },
+          "isEnabled": { "type": "boolean", "description": "Temporarily enable or disable access without changing the schedule" },
+          "tagIds": { "type": "array", "maxItems": 20, "items": { "type": "string", "format": "uuid" } },
+          "folderId": { "type": "string", "format": "uuid", "nullable": true },
+          "startsAt": { "type": "string", "format": "date-time", "nullable": true },
+          "expiresAt": { "type": "string", "format": "date-time", "nullable": true }
+        }
+      },
       "PinRequest": {
         "type": "object",
         "required": [
@@ -945,6 +1032,11 @@
               "daily"
             ],
             "properties": {
+              "cacheExpiresAt": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Expiry of the cached daily statistics; at most five minutes after collection."
+              },
               "item": {
                 "$ref": "#/components/schemas/ShortUrl"
               },

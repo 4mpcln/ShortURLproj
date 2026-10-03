@@ -3,11 +3,12 @@ import { FormEvent, useEffect, useMemo, useState } from 'react';
 import '../styles/shortenurl.css';
 import { getCreateShortUrlError } from '../api/errors';
 import { HelpTooltip } from '../components/ui/help-tooltip';
+import { Toast } from '../components/ui/toast';
 import { useAuth } from '../auth/AuthContext';
 import { LinkOrganization, emptyMetadata, metadataPayload } from '../components/LinkOrganization';
+import { useRecentShortUrls } from '../lib/useRecentShortUrls';
 import {
   CreateShortUrlRequest,
-  ShortUrl,
   createShortUrl,
 } from '../api/shortUrlClient';
 
@@ -20,17 +21,18 @@ const initialForm: FormState = {
 };
 
 export function ShortenUrlPage() {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
+  const { recentLinks, historyReady, remember } = useRecentShortUrls(loading ? null : user?.id || 'guest');
   const [metadata, setMetadata] = useState(emptyMetadata);
   const [phase, setPhase] = useState<'collapsed' | 'opening' | 'expanded' | 'closing'>('collapsed');
   const [hasOpened, setHasOpened] = useState(false);
   const expanded = phase === 'expanded' || phase === 'closing';
   const transitioning = phase === 'opening' || phase === 'closing';
   const [form, setForm] = useState<FormState>(initialForm);
-  const [latest, setLatest] = useState<ShortUrl | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState('');
-  useEffect(() => { setMetadata(emptyMetadata); setLatest(null); }, [user?.id]);
+  const [toast, setToast] = useState<{ id: number; message: string } | null>(null);
+  useEffect(() => { setMetadata(emptyMetadata); setMessage(''); }, [user?.id]);
 
   useEffect(() => {
     if (!transitioning) return;
@@ -40,8 +42,8 @@ export function ShortenUrlPage() {
   }, [phase, transitioning]);
 
   const canSubmit = useMemo(() => {
-    return form.originalUrl.trim().length > 0 && !isSubmitting;
-  }, [form.originalUrl, isSubmitting]);
+    return form.originalUrl.trim().length > 0 && !isSubmitting && historyReady;
+  }, [form.originalUrl, isSubmitting, historyReady]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -57,9 +59,10 @@ export function ShortenUrlPage() {
         customCode: expanded ? form.customCode?.trim() || undefined : undefined,
       };
       const response = await createShortUrl(payload);
-      setLatest(response.data);
+      remember(response.data);
       setForm(initialForm);
       setMetadata(emptyMetadata);
+      setToast({ id: Date.now(), message: 'Short URL created successfully.' });
     } catch (error) {
       setMessage(getCreateShortUrlError(error));
     } finally {
@@ -68,8 +71,10 @@ export function ShortenUrlPage() {
   }
 
   async function copyUrl(url: string) {
-    await navigator.clipboard.writeText(url);
-    setMessage('Copied short URL.');
+    try {
+      await navigator.clipboard.writeText(url);
+      setMessage('Copied short URL.');
+    } catch { setMessage('Could not copy the link.'); }
   }
 
   return (
@@ -162,33 +167,42 @@ export function ShortenUrlPage() {
           </button>
         </form>
 
-        {latest ? (
-          <section className="result">
-            <div>
-              <span>Latest short URL</span>
-              <strong>{latest.shortUrl}</strong>
-              <div className="result-destination">
-                <span>Original URL</span>
-                <a href={latest.originalUrl} target="_blank" rel="noreferrer">{latest.originalUrl}</a>
-              </div>
-            </div>
-            <div className="row-actions">
-              <button
-                type="button"
-                onClick={() => copyUrl(latest.shortUrl)}
-                aria-label="Copy latest short URL"
-              >
-                <Copy size={18} aria-hidden="true" />
-              </button>
-              <a href={latest.shortUrl} target="_blank" rel="noreferrer" aria-label="Open latest short URL">
-                <ExternalLink size={18} aria-hidden="true" />
-              </a>
-            </div>
+        {recentLinks.length > 0 && (
+          <section className="recent-links" aria-labelledby="recent-links-title">
+            <h2 id="recent-links-title">Recent links</h2>
+            <ol className="recent-links-list">
+              {recentLinks.map((latest, index) => (
+                <li className="result" key={latest.id}>
+                  <div>
+                    <span>{index === 0 ? 'Latest short URL' : 'Short URL'}</span>
+                    <strong title={latest.shortUrl}>{latest.shortUrl}</strong>
+                    <div className="result-destination">
+                      <span>Original URL</span>
+                      <a href={latest.originalUrl} target="_blank" rel="noreferrer">{latest.originalUrl}</a>
+                    </div>
+                  </div>
+                  <div className="row-actions">
+                    <button
+                      type="button"
+                      onClick={() => copyUrl(latest.shortUrl)}
+                      aria-label={index === 0 ? 'Copy latest short URL' : `Copy short URL ${latest.code}`}
+                      title={`Copy ${latest.shortUrl}`}
+                    >
+                      <Copy size={18} aria-hidden="true" />
+                    </button>
+                    <a href={latest.shortUrl} target="_blank" rel="noreferrer" aria-label={index === 0 ? 'Open latest short URL' : `Open short URL ${latest.code}`} title={`Open ${latest.shortUrl}`}>
+                      <ExternalLink size={18} aria-hidden="true" />
+                    </a>
+                  </div>
+                </li>
+              ))}
+            </ol>
           </section>
-        ) : null}
+        )}
 
         {message ? <p className="status-message" role="status">{message}</p> : null}
       </section>
+      {toast && <Toast key={toast.id} message={toast.message} onDismiss={() => setToast(null)} />}
 
     </main>
   );

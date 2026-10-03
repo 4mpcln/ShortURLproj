@@ -17,9 +17,20 @@
 .auth-modal::backdrop { background: rgb(0 0 0 / 55%); backdrop-filter: blur(6px); }
 .auth-modal[open] { display: flex; flex-direction: column; }
 .auth-modal__content { padding: 26px 26px 14px; min-height: 0; overflow: auto; }
-.auth-modal__heading { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
-.auth-brand { font-size: 22px; font-weight: 500; }
-.auth-modal .auth-close { min-width: 32px; min-height: 32px; background: transparent; color: var(--auth-muted); border: 0; }
+.auth-modal__heading { position: relative; display: flex; justify-content: center; align-items: center; min-height: 34px; margin-bottom: 18px; }
+.auth-brand { display: inline-flex; align-items: center; }
+.auth-brand__text {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+.auth-modal .auth-close { position: absolute; right: 0; top: 50%; transform: translateY(-50%); min-width: 32px; min-height: 32px; background: transparent; color: var(--auth-muted); border: 0; }
 .auth-modal h2 { font-size: 26px; margin-bottom: 12px; line-height: 1.2; }
 .auth-benefits { color: var(--auth-muted); font-size: 14px; line-height: 1.5; }
 .auth-benefits p { margin-bottom: 12px; }

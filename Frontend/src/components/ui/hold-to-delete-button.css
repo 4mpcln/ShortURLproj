@@ -1,0 +1,11 @@
+.hold-delete { position: relative; display: inline-flex; flex-shrink: 0; }
+.hold-delete__button { position: relative; overflow: hidden; isolation: isolate; width: 40px; height: 40px; touch-action: none; user-select: none; }
+.hold-delete__button svg { position: relative; z-index: 1; flex-shrink: 0; }
+.hold-delete__text { position: relative; z-index: 1; }
+.hold-delete__fill { position: absolute; inset: 0; background: #c5303d; transform: scaleX(0); transform-origin: left; pointer-events: none; transition: transform var(--click-fill-duration) ease-out; }
+.hold-delete__button[data-half-filled=true] .hold-delete__fill { transform: scaleX(.5); }
+.hold-delete__button[data-holding=true] .hold-delete__fill { animation: hold-delete-fill var(--hold-duration) linear forwards; }
+.hold-delete__button[data-submitting=true] .hold-delete__fill { transform: scaleX(1); }
+.hold-delete__button[data-half-filled=true], .hold-delete__button[data-holding=true], .hold-delete__button[data-submitting=true] { color: #fff; border-color: #c5303d; }
+@keyframes hold-delete-fill { from { transform: scaleX(var(--hold-start, 0)); } to { transform: scaleX(1); } }
+@media (prefers-reduced-motion: reduce) { .hold-delete__fill { transition: none; } }

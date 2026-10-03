@@ -25,7 +25,7 @@ export const createShortUrlSchema = z.object({
 export type CreateShortUrlInput = z.infer<typeof createShortUrlSchema>;
 
 export function toShortUrl(code: string) {
-  return `${config.appBaseUrl}/${code}`;
+  return `${config.shortUrlBase}/${code}`;
 }
 
 export async function createUniqueShortUrl(input: CreateShortUrlInput, userId?: string) {

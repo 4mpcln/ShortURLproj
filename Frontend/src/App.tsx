@@ -1,11 +1,12 @@
 import { useEffect, useState, type MouseEvent } from 'react';
-import { Link, Navigate, Route, Routes, useNavigate } from 'react-router-dom';
+import { Link, Navigate, Route, Routes, useMatch, useNavigate } from 'react-router-dom';
 import AnimatedBackground from './components/ui/animated-background';
 import { QleanMenu, type Theme } from './components/ui/qlean-menu';
 import { ShortenUrlPage } from './pages/ShortenUrlPage';
 import { QrMakerPage } from './pages/QrMakerPage';
 import { MyLinksPage } from './pages/MyLinksPage';
 import { LinkStatisticsPage } from './pages/LinkStatisticsPage';
+import { LinkAvailabilityPage } from './pages/LinkAvailabilityPage';
 import { useAuth, type AuthMode } from './auth/AuthContext';
 import { AuthModal } from './components/ui/auth-modal';
 
@@ -13,8 +14,8 @@ function getTheme(): Theme {
   try {
     const saved = localStorage.getItem('qlean-theme');
     if (saved === 'dark' || saved === 'light') return saved;
-  } catch { /* Use the system preference when storage is unavailable. */ }
-  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  } catch { /* Use day mode when storage is unavailable. */ }
+  return 'light';
 }
 
 function AuthEntry({ mode }: { mode: AuthMode }) {
@@ -30,6 +31,8 @@ function AuthEntry({ mode }: { mode: AuthMode }) {
 export function App() {
   const [theme, setTheme] = useState<Theme>(getTheme);
   const { promptGuest } = useAuth();
+  const availabilityPage = useMatch('/link-unavailable/:code');
+  const statisticsPage = useMatch('/my-links/:id');
 
   function handleToolClick(event: MouseEvent<HTMLDivElement>) {
     const target = event.target as HTMLElement;
@@ -43,9 +46,9 @@ export function App() {
   }, [theme]);
 
   return (
-    <div className="app-background-shell" onClickCapture={handleToolClick}>
+    <div className={`app-background-shell${statisticsPage ? ' app-background-shell--statistics' : ''}`} onClickCapture={handleToolClick}>
       <AnimatedBackground />
-      <QleanMenu theme={theme} onThemeChange={setTheme} />
+      {!availabilityPage && <QleanMenu theme={theme} onThemeChange={setTheme} />}
       <Routes>
         <Route path="/" element={<Navigate to="/shortenurl" replace />} />
         <Route path="/shortenurl" element={<ShortenUrlPage />} />
@@ -54,9 +57,10 @@ export function App() {
         <Route path="/login" element={<AuthEntry mode="login" />} />
         <Route path="/my-links" element={<MyLinksPage />} />
         <Route path="/my-links/:id" element={<LinkStatisticsPage />} />
+        <Route path="/link-unavailable/:code" element={<LinkAvailabilityPage />} />
         <Route path="*" element={<main className="pending-page"><h1>Page not found</h1><Link to="/shortenurl">Back to Short URL</Link></main>} />
       </Routes>
-      <AuthModal />
+      {!availabilityPage && <AuthModal />}
     </div>
   );
 }

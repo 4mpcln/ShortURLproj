@@ -52,11 +52,35 @@ test('member library: persistent organization, ownership, pinning, scheduling an
   const publicItem = await call('/api/short-urls/' + url.json.data.code); assert.deepEqual(publicItem.json.data.tags, []); assert.equal(publicItem.json.data.folderName, null);
   const later = new Date(Date.now() + 3600000).toISOString(), past = new Date(Date.now() - 3600000).toISOString();
   assert.equal((await call('/api/short-urls', a.cookie, { originalUrl: 'https://example.com', startsAt: later, expiresAt: past })).status, 400);
-  for (const [schedule, status] of [[{ startsAt: later }, 403], [{ expiresAt: past }, 410]]) {
+  for (const [schedule, status] of [[{ startsAt: later }, 302], [{ expiresAt: past }, 410]]) {
     const created = await call('/api/short-urls', a.cookie, { originalUrl: 'https://example.com', ...schedule }); assert.equal(created.status, 201);
-    assert.equal((await fetch(base + '/' + created.json.data.code, { redirect: 'manual' })).status, status);
+    const visit = await fetch(base + '/' + created.json.data.code, { redirect: 'manual' });
+    assert.equal(visit.status, status);
+    assert.equal(visit.headers.get('cache-control'), 'no-store');
+    if (schedule.startsAt) assert.equal(new URL(visit.headers.get('location')).pathname, `/link-unavailable/${created.json.data.code}`);
+    const access = await call(`/api/short-urls/${created.json.data.code}/access`);
+    assert.equal(access.status, 200);
+    assert.deepEqual(Object.keys(access.json.data).sort(), ['shortUrl', 'startsAt', 'status']);
+    assert.equal(access.json.data.status, schedule.startsAt ? 'scheduled' : 'expired');
+    assert.equal(access.json.data.startsAt, schedule.startsAt || null);
+    assert.equal(access.json.data.shortUrl, created.json.data.shortUrl);
     const result = await call(`/api/library/links/${created.json.data.id}/statistics`, a.cookie); assert.equal(result.json.data.item.clickCount, 0);
+    if (schedule.startsAt) {
+      await pool.query('UPDATE short_urls SET starts_at=$1 WHERE id=$2 AND user_id=$3', [past, created.json.data.id, a.json.data.id]);
+      assert.equal((await call(`/api/short-urls/${created.json.data.code}/access`)).json.data.status, 'active');
+      assert.equal((await call(`/api/library/links/${created.json.data.id}/statistics`, a.cookie)).json.data.item.clickCount, 0);
+      const opened = await fetch(base + '/' + created.json.data.code, { redirect: 'manual' });
+      assert.equal(opened.status, 302); assert.equal(opened.headers.get('location'), 'https://example.com');
+      assert.equal((await call(`/api/library/links/${created.json.data.id}/statistics`, a.cookie)).json.data.item.clickCount, 1);
+    }
   }
+  const missingAccess = await fetch(`${base}/api/short-urls/missing-${randomUUID()}/access`);
+  assert.equal(missingAccess.status, 404); assert.equal(missingAccess.headers.get('cache-control'), 'no-store');
+  const qrScheduled = await call('/api/library/qr', a.cookie, { originalUrl: 'Scheduled QR content', startsAt: later, qrOptions: { style: 'square', color: '#161616', size: 300 } });
+  assert.equal(qrScheduled.status, 201);
+  const qrWaiting = await fetch(base + '/' + qrScheduled.json.data.code, { redirect: 'manual' });
+  assert.equal(qrWaiting.status, 302); assert.equal(new URL(qrWaiting.headers.get('location')).pathname, `/link-unavailable/${qrScheduled.json.data.code}`);
+  assert.equal((await call(`/api/library/links/${qrScheduled.json.data.id}/statistics`, a.cookie)).json.data.item.clickCount, 0);
   const qrClosed = await call('/api/library/qr', a.cookie, { originalUrl: 'https://example.com', expiresAt: past, qrOptions: { style: 'square', color: '#161616', size: 300 } });
   assert.equal((await fetch(base + '/' + qrClosed.json.data.code, { redirect: 'manual' })).status, 410);
   const login = await call('/api/auth/login', null, { email, password });

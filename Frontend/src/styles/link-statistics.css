@@ -1,0 +1,75 @@
+.statistics-heading { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 16px; }
+.statistics-heading__title { display: flex; align-items: center; gap: 16px; min-width: 0; }
+.statistics-heading__title h1 { margin: 0; font-size: 28px; font-weight: 500; line-height: 1.3; overflow-wrap: anywhere; min-width: 0; }
+.statistics-heading__badges { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+.statistics-heading__badges .library-kind { padding: 5px; }
+.statistics-heading__badges .library-status { white-space: nowrap; }
+.statistics-heading .library-back { margin: 0; padding: 6px 0; border: 0; background: transparent; color: var(--library-muted); white-space: nowrap; flex-shrink: 0; gap: 3px; }
+.statistics-heading__period { display: flex; align-items: center; gap: 14px; flex-shrink: 0; }
+.statistics-created { font-size: 12px; color: var(--library-muted); white-space: nowrap; }
+.statistics-heading__period select { min-width: 132px; }
+.date-range-field { min-width: 0; }
+.date-range-field__trigger { width: min(260px, 32vw); min-height: 38px; padding: 7px 10px; text-align: left; }
+.date-range-field__trigger strong { max-width: 190px; }
+.date-range-dialog { min-width: min(340px, 78vw); }
+.statistics-toolbar { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; padding-bottom: 18px; margin-bottom: 24px; border-bottom: 1px solid var(--library-line); }
+.statistics-toolbar__status, .statistics-toolbar__actions { display: flex; align-items: center; gap: 6px; }
+.statistics-toolbar__actions { flex-wrap: wrap; width: 100%; justify-content: flex-end; }
+.statistics-toolbar__actions button { width: 38px; min-width: 38px; height: 38px; padding: 8px; box-sizing: border-box; }
+.statistics-toolbar__separator { height: 22px; width: 1px; background: var(--library-line); margin: 0 5px; }
+.statistics-toolbar__actions .hold-delete__button { color: #c53737; }
+.statistics-toolbar__actions .hold-delete__button[data-half-filled=true], .statistics-toolbar__actions .hold-delete__button[data-holding=true], .statistics-toolbar__actions .hold-delete__button[data-submitting=true] { color: #fff; }
+.statistics-chart { display: flex; flex-direction: column; min-width: 0; min-height: 0; }
+.statistics-summary-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 22px; }
+.statistics-analysis-scroll { flex: 1; min-height: 0; overflow: auto; overscroll-behavior: contain; scrollbar-gutter: stable; padding-right: 8px; }
+.statistics-schedule { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 12px; }
+.my-links-page .statistics-details-toggle { display: none; }
+.app-background-shell--statistics { height: 100dvh; display: flex; flex-direction: column; overflow: hidden; }
+.app-background-shell--statistics > .qlean-header { flex-shrink: 0; }
+.app-background-shell--statistics .link-statistics-page { flex: 1; min-height: 0; width: 100%; display: flex; flex-direction: column; padding-top: 24px; padding-bottom: 20px; overflow: hidden; }
+.link-statistics-page .statistics-heading, .link-statistics-page .statistics-toolbar, .link-statistics-page .statistics-totals { flex-shrink: 0; }
+.link-statistics-page .statistics-heading__title h1 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.link-statistics-page .statistics-layout { flex: 1; min-height: 0; }
+.link-statistics-page .statistics-details { min-height: 0; overflow: auto; overscroll-behavior: contain; }
+.link-statistics-page .statistics-totals { gap: 40px; margin-bottom: 0; }
+.link-statistics-page .statistics-totals strong { font-size: 30px; font-variant-numeric: tabular-nums; }
+.link-statistics-page > p[role=status] { font-size: 13px; }
+@media (max-width: 760px) {
+  .statistics-heading { flex-wrap: wrap; }
+  .statistics-heading__title { width: 100%; gap: 12px; }
+  .statistics-heading__title h1 { font-size: 23px; }
+  .statistics-heading__title { gap: 8px; }
+  .statistics-heading__badges { gap: 4px; }
+  .statistics-heading__badges .library-status { padding: 4px; font-size: 10px; }
+  .statistics-heading__period { margin-left: auto; gap: 8px; }
+  .date-range-field__trigger { width: min(240px, 100%); }
+  .statistics-created { font-size: 10px; }
+  .link-statistics-page .statistics-layout { grid-template-rows: auto minmax(0,1fr); gap: 12px; }
+  .link-statistics-page .statistics-details { padding: 0 0 8px; overflow: visible; }
+  .my-links-page .statistics-details-toggle { display: flex; width: 100%; justify-content: space-between; background: transparent; border: 0; padding: 0; min-height: 28px; }
+  .statistics-details__content { display: none; }
+  .statistics-details[data-expanded=true] .statistics-details__content { display: block; max-height: 150px; overflow: auto; overscroll-behavior: contain; }
+  .link-statistics-page .statistics-toolbar { padding-bottom: 10px; margin-bottom: 12px; }
+  .link-statistics-page .statistics-summary-row { flex-wrap: wrap; margin-bottom: 12px; }
+  .link-statistics-page .statistics-totals { margin-bottom: 0; }
+  .link-statistics-page .statistics-totals strong { font-size: 24px; }
+  .link-statistics-page .statistics-totals span { font-size: 12px; }
+}
+@media (max-width: 480px) {
+  .statistics-heading__period { width: 100%; flex-wrap: wrap; justify-content: flex-end; }
+  .statistics-created { flex-basis: 100%; text-align: right; }
+  .date-range-field { width: 100%; }
+  .date-range-field__trigger { width: 100%; }
+  .statistics-toolbar__actions { gap: 4px; }
+  .statistics-toolbar__actions button { width: 34px; min-width: 34px; height: 34px; min-height: 34px; padding: 7px; }
+  .statistics-toolbar__separator { margin: 0 3px; }
+}
+@media (max-width: 760px) and (max-height: 700px) {
+  .app-background-shell--statistics > .qlean-header { padding-top: 10px; }
+  .app-background-shell--statistics .qlean-menu { padding-top: 10px; padding-bottom: 10px; gap: 8px; }
+  .app-background-shell--statistics .qlean-menu__pages a { height: 36px; }
+  .app-background-shell--statistics .link-statistics-page { padding-top: 12px; padding-bottom: 12px; }
+  .link-statistics-page .statistics-heading { margin-bottom: 10px; }
+  .link-statistics-page .statistics-toolbar { gap: 8px; margin-bottom: 8px; }
+  .link-statistics-page .statistics-totals { margin-bottom: 8px; }
+}

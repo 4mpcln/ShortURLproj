@@ -8,6 +8,7 @@ import { findByCode, listShortUrls, listUserShortUrls, registerClick } from './s
 import { authenticate, authRouter, currentUser } from './auth.js';
 import { createShortUrlSchema, createUniqueShortUrl, toShortUrl } from './shortUrlService.js';
 import { libraryRouter } from './library.js';
+import { startCache } from './redis.js';
 
 const app = express();
 
@@ -73,12 +74,26 @@ app.get('/api/short-urls/:code', async (req, res, next) => {
   }
 });
 
+app.get('/api/short-urls/:code/access', async (req, res, next) => {
+  res.setHeader('Cache-Control', 'no-store');
+  try {
+    const item = await findByCode(req.params.code);
+    if (!item) { res.status(404).json({ message: 'Short URL not found.' }); return; }
+    res.json({ data: { status: item.status, startsAt: item.startsAt, shortUrl: toShortUrl(item.code) } });
+  } catch (error) { next(error); }
+});
+
 app.get('/:code', async (req, res, next) => {
   res.setHeader('Cache-Control', 'no-store');
   try {
     const item = await registerClick(req.params.code);
     if (!item) {
       const existing = await findByCode(req.params.code);
+      if (existing?.status === 'scheduled' || existing?.status === 'disabled') {
+        const noticeUrl = new URL(`/link-unavailable/${encodeURIComponent(existing.code)}`, config.webOrigin);
+        res.redirect(302, noticeUrl.toString());
+        return;
+      }
       res.status(existing?.status === 'expired' ? 410 : existing ? 403 : 404).send(existing?.status === 'expired' ? 'This link has expired.' : existing ? 'This link is not available yet.' : 'Short URL not found.');
       return;
     }
@@ -112,5 +127,6 @@ app.use((error: unknown, _req: express.Request, res: express.Response, _next: ex
 });
 
 app.listen(config.port, () => {
+  startCache();
   console.log(`ShortURL API is running on http://localhost:${config.port}`);
 });

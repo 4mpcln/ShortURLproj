@@ -55,7 +55,7 @@ test('accounts, session cookies, private link ownership and guest access', async
   const memberLink = await request('/api/short-urls', { cookie: firstCookie, body: { originalUrl: 'https://example.com/member-test' } });
   assert.equal(memberLink.response.status, 201);
   links.push(memberLink.body.data.id);
-  const publicBaseUrl = (process.env.APP_BASE_URL || `http://localhost:${process.env.PORT || 3211}`).replace(/\/+$/, '');
+  const publicBaseUrl = (process.env.SHORT_URL_BASE || process.env.APP_BASE_URL || `http://localhost:${process.env.PORT || 3211}`).replace(/\/+$/, '');
   assert.equal(memberLink.body.data.shortUrl, `${publicBaseUrl}/${memberLink.body.data.code}`);
   const guestLink = await request('/api/short-urls', { body: { originalUrl: 'https://example.com/guest-test' } });
   assert.equal(guestLink.response.status, 201);

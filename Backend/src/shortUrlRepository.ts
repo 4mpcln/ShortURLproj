@@ -1,5 +1,5 @@
 import { pool } from './db.js';
-import type { LinkMetadata } from './linkMetadata.js';
+import { validateMetadata, type LinkMetadata } from './linkMetadata.js';
 
 export type Tag = { id: string; name: string; color: string };
 
@@ -23,9 +23,10 @@ export type ShortUrl = {
   startsAt: string | null;
   expiresAt: string | null;
   isPinned: boolean;
+  isEnabled: boolean;
   tags: Tag[];
   qrOptions: { style: string; color: string; size: number } | null;
-  status: 'active' | 'scheduled' | 'expired';
+  status: 'active' | 'scheduled' | 'expired' | 'disabled';
 };
 
 type ShortUrlRow = {
@@ -43,6 +44,7 @@ type ShortUrlRow = {
   starts_at: Date | null;
   expires_at: Date | null;
   is_pinned: boolean;
+  is_enabled: boolean;
   tags?: Tag[];
   qr_options: ShortUrl['qrOptions'];
 };
@@ -63,9 +65,10 @@ function mapRow(row: ShortUrlRow): ShortUrl {
     startsAt: row.starts_at?.toISOString() ?? null,
     expiresAt: row.expires_at?.toISOString() ?? null,
     isPinned: row.is_pinned,
+    isEnabled: row.is_enabled,
     tags: row.tags ?? [],
     qrOptions: row.qr_options,
-    status: row.expires_at && row.expires_at <= new Date() ? 'expired' : row.starts_at && row.starts_at > new Date() ? 'scheduled' : 'active',
+    status: !row.is_enabled ? 'disabled' : row.expires_at && row.expires_at <= new Date() ? 'expired' : row.starts_at && row.starts_at > new Date() ? 'scheduled' : 'active',
   };
 }
 
@@ -122,7 +125,7 @@ export async function registerClick(code: string) {
     `
       WITH accessed AS (
         UPDATE short_urls SET click_count = click_count + 1, last_clicked_at = NOW(), updated_at = NOW()
-        WHERE code = $1 AND (starts_at IS NULL OR starts_at <= NOW()) AND (expires_at IS NULL OR expires_at > NOW())
+        WHERE code = $1 AND is_enabled AND (starts_at IS NULL OR starts_at <= NOW()) AND (expires_at IS NULL OR expires_at > NOW())
         RETURNING *
       ), logged AS (
         INSERT INTO click_logs (short_url_id) SELECT id FROM accessed RETURNING short_url_id
@@ -144,4 +147,38 @@ export async function listUserShortUrls(userId: string) {
 export async function findOwnedLink(id: string, userId: string) {
   const result = await pool.query<ShortUrlRow>(`${selectLinks} WHERE s.id = $1 AND s.user_id = $2`, [id, userId]);
   return result.rows[0] ? mapRow(result.rows[0]) : null;
+}
+
+export async function updateOwnedLink(id: string, userId: string, input: { originalUrl?: string; title?: string; isEnabled?: boolean } & LinkMetadata) {
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const existing = await client.query<ShortUrlRow>(`${selectLinks} WHERE s.id=$1 AND s.user_id=$2 FOR UPDATE OF s`, [id, userId]);
+    if (!existing.rows[0]) { await client.query('ROLLBACK'); return null; }
+    const current = mapRow(existing.rows[0]);
+    const metadata: LinkMetadata = {
+      tagIds: input.tagIds ?? current.tags.map(tag => tag.id),
+      folderId: input.folderId === undefined ? current.folderId : input.folderId,
+      startsAt: input.startsAt === undefined ? current.startsAt : input.startsAt,
+      expiresAt: input.expiresAt === undefined ? current.expiresAt : input.expiresAt,
+    };
+    // Validate the merged schedule while holding the row lock, including partial edits.
+    await validateMetadata(metadata, userId, client);
+    await client.query(`UPDATE short_urls SET original_url=$1,title=$2,folder_id=$3,starts_at=$4,expires_at=$5,is_enabled=$8,updated_at=NOW()
+      WHERE id=$6 AND user_id=$7`, [input.originalUrl ?? current.originalUrl, input.title === undefined ? current.title : input.title || null,
+      metadata.folderId, metadata.startsAt, metadata.expiresAt, id, userId, input.isEnabled ?? current.isEnabled]);
+    if (input.tagIds !== undefined) {
+      await client.query('DELETE FROM short_url_tags WHERE short_url_id=$1', [id]);
+      if (input.tagIds.length) await client.query('INSERT INTO short_url_tags (short_url_id,tag_id) SELECT $1,unnest($2::uuid[]) ON CONFLICT DO NOTHING', [id, input.tagIds]);
+    }
+    const saved = await client.query<ShortUrlRow>(`${selectLinks} WHERE s.id=$1 AND s.user_id=$2`, [id, userId]);
+    await client.query('COMMIT');
+    return mapRow(saved.rows[0]);
+  } catch (error) { await client.query('ROLLBACK'); throw error; }
+  finally { client.release(); }
+}
+
+export async function deleteOwnedLink(id: string, userId: string) {
+  const result = await pool.query('DELETE FROM short_urls WHERE id=$1 AND user_id=$2 RETURNING id', [id, userId]);
+  return Boolean(result.rowCount);
 }

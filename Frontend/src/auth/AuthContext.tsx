@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import { getShortURLAPI, type User } from '../api/generated/shortUrl';
+import { clearStatisticsCache } from '../lib/statisticsCache';
 
 export type AuthMode = 'login' | 'register';
 const api = getShortURLAPI();
@@ -57,8 +58,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     user, loading, modal, openAuth,
     switchMode: setModal,
     closeAuth: () => { rememberPrompt(); setModal(null); },
-    signedIn: account => { setUser(account); rememberPrompt(); setModal(null); },
-    logout: async () => { await api.logoutUser(); setUser(null); },
+    signedIn: account => { clearStatisticsCache(); setUser(account); rememberPrompt(); setModal(null); },
+    logout: async () => { await api.logoutUser(); clearStatisticsCache(); setUser(null); },
     promptGuest: () => {
       if (user || prompted || modal) return false;
       if (loading) { setPendingPrompt(true); return true; }

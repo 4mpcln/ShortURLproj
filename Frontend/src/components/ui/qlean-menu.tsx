@@ -2,6 +2,7 @@ import { Library, Link2, LogOut, Moon, QrCode, Sun } from 'lucide-react';
 import { useState, type ReactNode } from 'react';
 import { useAuth } from '../../auth/AuthContext';
 import { Link, NavLink } from 'react-router-dom';
+import { QleanLogo } from './qlean-logo';
 import './qlean-menu.css';
 
 export type Theme = 'light' | 'dark';
@@ -22,8 +23,7 @@ export function QleanMenu({ logo, theme, onThemeChange }: QleanMenuProps) {
     <header className="qlean-header">
       <nav className="qlean-menu" data-theme={theme} aria-label="Main navigation">
         <Link className="qlean-brand" to="/shortenurl" aria-label="Qlean home">
-          {logo ?? <span className="qlean-logo" aria-hidden="true">Q</span>}
-          <span>Qlean</span>
+          {logo ?? <QleanLogo />}
         </Link>
 
         <div className="qlean-menu__pages">
@@ -49,11 +49,10 @@ export function QleanMenu({ logo, theme, onThemeChange }: QleanMenuProps) {
             {theme === 'dark' ? <Sun size={20} aria-hidden="true" /> : <Moon size={20} aria-hidden="true" />}
           </button>
           {user ? <>
-            <span className="qlean-user-name" title={user.name}>{user.name}</span>
-            <button className="qlean-theme" type="button" disabled={loggingOut} aria-label="Log out" title={logoutError ? 'Could not log out. Try again.' : `Log out ${user.name}`} onClick={async () => {
+            <button className="qlean-theme qlean-logout" type="button" disabled={loggingOut} aria-label={`Log out ${user.name}`} title={logoutError ? 'Could not log out. Try again.' : `Log out ${user.name}`} onClick={async () => {
               setLoggingOut(true); setLogoutError(false);
               try { await logout(); } catch { setLogoutError(true); } finally { setLoggingOut(false); }
-            }}><LogOut size={18} aria-hidden="true" /></button>
+            }}><span className="qlean-user-name">{user.name}</span><LogOut size={18} aria-hidden="true" /></button>
             {logoutError && <span className="sr-only" role="alert">Could not log out. Try again.</span>}
           </> : <>
             <button className="qlean-register" type="button" disabled={loading} onClick={() => openAuth('register')}>Register</button>

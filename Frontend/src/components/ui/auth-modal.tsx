@@ -3,6 +3,7 @@ import { isAxiosError } from 'axios';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { getShortURLAPI } from '../../api/generated/shortUrl';
 import { useAuth } from '../../auth/AuthContext';
+import { QleanLogo } from './qlean-logo';
 import './auth-modal.css';
 
 const api = getShortURLAPI();
@@ -66,14 +67,14 @@ export function AuthModal() {
       if (event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom) closeAuth();
     } }}>
     <div className="auth-modal__content">
-      <div className="auth-modal__heading"><span className="auth-brand">Qlean</span><button type="button" className="auth-close" onClick={closeAuth} aria-label="Close" title="Close"><X size={20} /></button></div>
-      <h2 id="auth-title">{register ? 'Create your account' : 'Welcome to Qlean'}</h2>
+      <div className="auth-modal__heading"><span className="auth-brand"><QleanLogo variant="compact" /><span className="auth-brand__text">Qlean</span></span><button type="button" className="auth-close" onClick={closeAuth} aria-label="Close" title="Close"><X size={20} /></button></div>
+      <h2 id="auth-title">{register ? 'Create your account' : 'Welcome back'}</h2>
       <div id="auth-benefits" className="auth-benefits">
         <p>Keep your links in one place with a free account.</p>
         <ul>
           <li><Bookmark size={17} aria-hidden="true" />Save links and QR codes to your library</li>
           <li><Link2 size={17} aria-hidden="true" />Organize with tags, folders and access schedules</li>
-          <li><BarChart3 size={17} aria-hidden="true" />View click counts for each link</li>
+          <li><BarChart3 size={17} aria-hidden="true" />View click counts and other statistics for each link</li>
         </ul>
       </div>
       <div className="auth-tabs" role="group" aria-label="Account mode">

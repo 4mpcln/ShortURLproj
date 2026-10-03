@@ -1,0 +1,19 @@
+:is(.my-links-page, .library-item) button.link-action-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  min-width: 38px;
+  height: 38px;
+  min-height: 38px;
+  padding: 8px;
+  box-sizing: border-box;
+  border: 1px solid var(--library-line);
+  border-radius: 6px;
+  background: var(--library-surface);
+  color: inherit;
+  flex-shrink: 0;
+}
+:is(.my-links-page, .library-item) button.link-action-button:hover:not(:disabled) { background: #80808020; }
+:is(.my-links-page, .library-item) button.link-action-button:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
+[data-theme=dark] :is(.my-links-page, .library-item) button.link-action-button { background: #222; }
