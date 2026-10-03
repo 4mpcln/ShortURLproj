@@ -23,9 +23,9 @@ test('Redis statistics: real TTL, cached daily visits, ownership and mutation in
     const response = await fetch(base + path, { method, headers: { ...(cookie ? { Cookie: cookie } : {}), ...(body ? { 'Content-Type': 'application/json' } : {}) }, body: body ? JSON.stringify(body) : undefined });
     return { status: response.status, data: response.status === 204 ? null : await response.json(), cookie: response.headers.get('set-cookie')?.split(';')[0] };
   }
-  const owner = await call('/api/auth/register', null, { name: 'Cache QA', email: `cache-${randomUUID()}@example.com`, password: 'Cache-test-123' });
+  const owner = await call('/api/auth/register', null, { name: `Cache QA ${randomUUID()}`, email: `cache-${randomUUID()}@example.com`, password: 'Cache-test-123' });
   assert.equal(owner.status, 201); users.push(owner.data.data.id);
-  const other = await call('/api/auth/register', null, { name: 'Other cache QA', email: `cache-${randomUUID()}@example.com`, password: 'Cache-test-123' });
+  const other = await call('/api/auth/register', null, { name: `Other cache QA ${randomUUID()}`, email: `cache-${randomUUID()}@example.com`, password: 'Cache-test-123' });
   users.push(other.data.data.id);
   const created = await call('/api/short-urls', owner.cookie, { originalUrl: 'https://example.com/cache-test' });
   const item = created.data.data;

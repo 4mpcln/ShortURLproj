@@ -91,6 +91,21 @@
         }
       }
     },
+    "/api/short-urls/{code}/unlock": {
+      "post": {
+        "operationId": "unlockLink",
+        "summary": "Verify a six-digit access code and record an authorized visit",
+        "parameters": [{ "name": "code", "in": "path", "required": true, "schema": { "type": "string" } }],
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/UnlockLinkRequest" } } } },
+        "responses": {
+          "200": { "description": "Authorized destination", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/UnlockLinkResponse" } } } },
+          "400": { "description": "Invalid access code format" },
+          "403": { "description": "Incorrect access code or unavailable link" },
+          "404": { "description": "Link not found" },
+          "429": { "description": "Too many incorrect attempts" }
+        }
+      }
+    },
     "/api/short-urls/{code}/access": {
       "get": {
         "operationId": "getLinkAccess",
@@ -186,7 +201,7 @@
             "description": "Invalid credentials"
           },
           "409": {
-            "description": "Email already registered"
+            "description": "Username or email already registered (case-insensitive, ignoring surrounding whitespace)"
           },
           "429": {
             "description": "Too many attempts"
@@ -493,7 +508,9 @@
               "minimum": 1,
               "maximum": 90
             }
-          }
+          },
+          { "name": "startDate", "in": "query", "schema": { "type": "string", "format": "date" } },
+          { "name": "endDate", "in": "query", "schema": { "type": "string", "format": "date" } }
         ],
         "responses": {
           "200": {
@@ -567,8 +584,19 @@
             "type": "string",
             "format": "date-time",
             "nullable": true
-          }
+          },
+          "accessCode": { "type": "string", "pattern": "^[0-9]{6}$", "nullable": true }
         }
+      },
+      "UnlockLinkRequest": {
+        "type": "object", "required": ["accessCode"],
+        "properties": { "accessCode": { "type": "string", "pattern": "^[0-9]{6}$", "minLength": 6, "maxLength": 6 } }
+      },
+      "UnlockLinkResponse": {
+        "type": "object", "required": ["data"],
+        "properties": { "data": { "type": "object", "required": ["originalUrl", "kind"], "properties": {
+          "originalUrl": { "type": "string" }, "kind": { "type": "string", "enum": ["url", "qr"] }
+        } } }
       },
       "ShortUrl": {
         "type": "object",
@@ -587,6 +615,7 @@
           "expiresAt",
           "isPinned",
           "isEnabled",
+          "hasAccessCode",
           "tags",
           "qrOptions",
           "status"
@@ -658,6 +687,7 @@
           "isEnabled": {
             "type": "boolean"
           },
+          "hasAccessCode": { "type": "boolean" },
           "tags": {
             "type": "array",
             "items": {
@@ -698,11 +728,12 @@
         "properties": {
           "data": {
             "type": "object",
-            "required": ["status", "startsAt", "shortUrl"],
+            "required": ["status", "startsAt", "shortUrl", "hasAccessCode"],
             "properties": {
               "status": { "type": "string", "enum": ["active", "scheduled", "expired", "disabled"] },
               "startsAt": { "type": "string", "format": "date-time", "nullable": true },
-              "shortUrl": { "type": "string", "format": "uri" }
+              "shortUrl": { "type": "string", "format": "uri" },
+              "hasAccessCode": { "type": "boolean" }
             }
           }
         }
@@ -770,21 +801,44 @@
         }
       },
       "LoginRequest": {
-        "type": "object",
-        "required": [
-          "email",
-          "password"
-        ],
-        "properties": {
-          "email": {
-            "type": "string",
-            "format": "email"
+        "oneOf": [
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["identifier", "password"],
+            "properties": {
+              "identifier": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 254,
+                "description": "Unique username (the existing account name) or email, matched case-insensitively with surrounding whitespace ignored."
+              },
+              "password": {
+                "type": "string",
+                "minLength": 1,
+                "description": "At most 72 UTF-8 bytes"
+              }
+            }
           },
-          "password": {
-            "type": "string",
-            "minLength": 1
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["email", "password"],
+            "description": "Legacy email-only login request. Use identifier for new clients.",
+            "properties": {
+              "email": {
+                "type": "string",
+                "format": "email",
+                "maxLength": 254
+              },
+              "password": {
+                "type": "string",
+                "minLength": 1,
+                "description": "At most 72 UTF-8 bytes"
+              }
+            }
           }
-        }
+        ]
       },
       "RegisterRequest": {
         "type": "object",
@@ -797,12 +851,14 @@
           "name": {
             "type": "string",
             "minLength": 1,
-            "maxLength": 80
+            "maxLength": 80,
+            "description": "Unique username, matched case-insensitively with surrounding whitespace ignored."
           },
           "email": {
             "type": "string",
             "format": "email",
-            "maxLength": 254
+            "maxLength": 254,
+            "description": "Unique email address, matched case-insensitively with surrounding whitespace ignored."
           },
           "password": {
             "type": "string",
@@ -958,7 +1014,8 @@
             "type": "string",
             "format": "date-time",
             "nullable": true
-          }
+          },
+          "accessCode": { "type": "string", "pattern": "^[0-9]{6}$", "nullable": true }
         }
       },
       "TagResponse": {
@@ -994,7 +1051,8 @@
           "tagIds": { "type": "array", "maxItems": 20, "items": { "type": "string", "format": "uuid" } },
           "folderId": { "type": "string", "format": "uuid", "nullable": true },
           "startsAt": { "type": "string", "format": "date-time", "nullable": true },
-          "expiresAt": { "type": "string", "format": "date-time", "nullable": true }
+          "expiresAt": { "type": "string", "format": "date-time", "nullable": true },
+          "accessCode": { "type": "string", "pattern": "^[0-9]{6}$", "nullable": true }
         }
       },
       "PinRequest": {
@@ -1040,6 +1098,7 @@
               "item": {
                 "$ref": "#/components/schemas/ShortUrl"
               },
+              "accessCode": { "type": "string", "nullable": true, "description": "Access code, visible only to the authenticated owner in statistics." },
               "daily": {
                 "type": "array",
                 "items": {

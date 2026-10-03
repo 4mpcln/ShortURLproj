@@ -3,6 +3,7 @@ import { randomUUID } from 'node:crypto';
 import test from 'node:test';
 import bcrypt from 'bcryptjs';
 import dotenv from 'dotenv';
+import jwt from 'jsonwebtoken';
 import pg from 'pg';
 
 dotenv.config();
@@ -31,7 +32,7 @@ test('accounts, session cookies, private link ownership and guest access', async
 
   const password = 'Qlean-test-password-123';
   const email = `auth-test-${randomUUID()}@example.com`;
-  const first = await request('/api/auth/register', { body: { name: 'Auth Test', email: email.toUpperCase(), password } });
+  const first = await request('/api/auth/register', { body: { name: `Auth Test ${randomUUID()}`, email: email.toUpperCase(), password } });
   assert.equal(first.response.status, 201);
   users.push(first.body.data.id);
   assert.equal(first.body.data.email, email);
@@ -39,7 +40,10 @@ test('accounts, session cookies, private link ownership and guest access', async
   const setCookie = first.response.headers.get('set-cookie');
   assert.match(setCookie, /HttpOnly/);
   assert.match(setCookie, /SameSite=Lax/);
+  assert.match(setCookie, /Max-Age=3600(?:;|$)/);
   const firstCookie = setCookie.split(';')[0];
+  const registrationSession = jwt.decode(firstCookie.slice('qlean_session='.length));
+  assert.equal(registrationSession.exp - registrationSession.iat, 3600);
   const stored = await pool.query('SELECT password_hash FROM users WHERE id = $1', [users[0]]);
   assert.notEqual(stored.rows[0].password_hash, password);
   assert(await bcrypt.compare(password, stored.rows[0].password_hash));
@@ -60,7 +64,7 @@ test('accounts, session cookies, private link ownership and guest access', async
   const guestLink = await request('/api/short-urls', { body: { originalUrl: 'https://example.com/guest-test' } });
   assert.equal(guestLink.response.status, 201);
   links.push(guestLink.body.data.id);
-  const second = await request('/api/auth/register', { body: { name: 'Second User', email: `auth-test-${randomUUID()}@example.com`, password } });
+  const second = await request('/api/auth/register', { body: { name: `Second User ${randomUUID()}`, email: `auth-test-${randomUUID()}@example.com`, password } });
   assert.equal(second.response.status, 201);
   users.push(second.body.data.id);
   const secondCookie = second.response.headers.get('set-cookie').split(';')[0];
@@ -75,10 +79,18 @@ test('accounts, session cookies, private link ownership and guest access', async
   assert.equal(redirect.status, 302);
   assert.equal(redirect.headers.get('location'), 'https://example.com/member-test');
   assert.equal((await request('/api/my-links', { cookie: firstCookie })).body.data[0].clickCount, 1);
+  const hostedRedirect = await fetch(`${baseUrl}/s/${memberLink.body.data.code}`, { redirect: 'manual' });
+  assert.equal(hostedRedirect.status, 302);
+  assert.equal(hostedRedirect.headers.get('location'), 'https://example.com/member-test');
+  assert.equal((await request('/api/my-links', { cookie: firstCookie })).body.data[0].clickCount, 2);
   const logout = await request('/api/auth/logout', { method: 'POST', cookie: firstCookie });
   assert.equal(logout.response.status, 204);
   assert.match(logout.response.headers.get('set-cookie'), /Expires=Thu, 01 Jan 1970/);
   const login = await request('/api/auth/login', { body: { email, password } });
   assert.equal(login.response.status, 200);
   assert.equal(login.body.data.id, users[0]);
+  const loginCookie = login.response.headers.get('set-cookie');
+  assert.match(loginCookie, /Max-Age=3600(?:;|$)/);
+  const loginSession = jwt.decode(loginCookie.split(';')[0].slice('qlean_session='.length));
+  assert.equal(loginSession.exp - loginSession.iat, 3600);
 });

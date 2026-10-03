@@ -1,4 +1,4 @@
-import { MoreHorizontal, Plus, Shuffle } from 'lucide-react';
+import { ChevronDown, MoreHorizontal, Plus, Shuffle } from 'lucide-react';
 import { useEffect, useId, useState } from 'react';
 import { isAxiosError } from 'axios';
 import { getShortURLAPI, type Organization } from '../api/generated/shortUrl';
@@ -7,18 +7,19 @@ import { MAX_SELECTED_TAGS, TagPickerModal } from './ui/tag-picker-modal';
 import { Tooltip } from './ui/tooltip';
 import { NewFolderModal } from './ui/new-folder-modal';
 import { ScheduleDateTimeField } from './ui/schedule-date-time';
+import { AccessCodeField } from './ui/access-code-field';
 import '../styles/organization.css';
 const api = getShortURLAPI();
-export type Metadata = { tagIds: string[]; folderId: string; startsAt: string; expiresAt: string };
-export const emptyMetadata: Metadata = { tagIds: [], folderId: '', startsAt: '', expiresAt: '' };
+export type Metadata = { tagIds: string[]; folderId: string; startsAt: string; expiresAt: string; accessCode?: string | null };
+export const emptyMetadata: Metadata = { tagIds: [], folderId: '', startsAt: '', expiresAt: '', accessCode: null };
 export function metadataPayload(value: Metadata) {
-  return { tagIds: value.tagIds, folderId: value.folderId || null, startsAt: value.startsAt ? new Date(value.startsAt).toISOString() : null, expiresAt: value.expiresAt ? new Date(value.expiresAt).toISOString() : null };
+  return { tagIds: value.tagIds, folderId: value.folderId || null, startsAt: value.startsAt ? new Date(value.startsAt).toISOString() : null, expiresAt: value.expiresAt ? new Date(value.expiresAt).toISOString() : null, accessCode: value.accessCode };
 }
 export function libraryError(error: unknown) {
   return isAxiosError<{ message?: string }>(error) ? error.response?.data.message || 'Cannot connect to the server.' : 'Please try again.';
 }
 const palette = ['#db2777','#0891b2','#9333ea','#65a30d','#dc2626','#4f46e5','#0d9488','#d97706','#475569'];
-export function LinkOrganization({ value, onChange, disabled = false }: { value: Metadata; onChange: (value: Metadata) => void; disabled?: boolean }) {
+export function LinkOrganization({ value, onChange, disabled = false, isProtected = false }: { value: Metadata; onChange: (value: Metadata) => void; disabled?: boolean; isProtected?: boolean }) {
   const { user } = useAuth();
   const id = useId();
   const [organization, setOrganization] = useState<Organization>({ tags: [], folders: [] });
@@ -63,9 +64,9 @@ export function LinkOrganization({ value, onChange, disabled = false }: { value:
     <div className="organization-tags"><span>Tags</span><div className="tag-options">
       {visibleTags.map(tag => <Tooltip key={tag.id} text={value.tagIds.includes(tag.id) ? `Remove ${tag.name} tag` : value.tagIds.length >= MAX_SELECTED_TAGS ? `Select up to ${MAX_SELECTED_TAGS} tags` : `Add ${tag.name} tag`}><button type="button" aria-pressed={value.tagIds.includes(tag.id)} disabled={!value.tagIds.includes(tag.id) && value.tagIds.length >= MAX_SELECTED_TAGS} onClick={() => onChange({ ...value, tagIds: value.tagIds.includes(tag.id) ? value.tagIds.filter(item => item !== tag.id) : [...value.tagIds, tag.id] })}><i style={{ background: tag.color }} />{tag.name}</button></Tooltip>)}
       {organization.tags.length > 5 && <Tooltip text="Browse all tags"><button type="button" aria-haspopup="dialog" aria-controls={`${id}-tag-picker`} onClick={() => setTagPickerOpen(true)}><MoreHorizontal size={17} aria-hidden="true" />Click for more{hiddenSelected ? ` (${hiddenSelected} selected)` : ''}</button></Tooltip>}
-      <Tooltip text={tagEditor ? 'Close new tag form' : 'Create a new tag'}><button type="button" aria-label="Create tag" onClick={() => { setTagEditor(!tagEditor); if (used.has(color)) shuffle(); }}><Plus size={17} /></button></Tooltip>
+      <Tooltip text={tagEditor ? 'Close new tag form' : 'Create a new tag'}><button type="button" aria-label={tagEditor ? 'Close new tag form' : 'Create tag'} aria-expanded={tagEditor} aria-controls={`${id}-tag-editor`} onClick={() => { setTagEditor(!tagEditor); if (used.has(color)) shuffle(); }}>{tagEditor ? <ChevronDown size={17} aria-hidden="true" /> : <Plus size={17} aria-hidden="true" />}</button></Tooltip>
     </div></div>
-    {tagEditor && <div className="organization-editor">
+    {tagEditor && <div id={`${id}-tag-editor`} className="organization-editor">
       <input aria-label="New tag name" maxLength={40} placeholder="Tag name" value={tagName} onChange={event => setTagName(event.target.value)} />
       <input type="color" aria-label="Tag color" value={color} onChange={event => setColor(event.target.value)} />
       <Tooltip text="Choose an unused tag color"><button type="button" aria-label="Choose unused color" onClick={shuffle}><Shuffle size={18} /></button></Tooltip>
@@ -84,6 +85,7 @@ export function LinkOrganization({ value, onChange, disabled = false }: { value:
       <ScheduleDateTimeField label="Opens at" helpText="The link will start working at this date and time. Before then, visitors see an unavailable page." disabled={disabled || busy} value={value.startsAt} onChange={startsAt => onChange({ ...value, startsAt })} />
       <ScheduleDateTimeField label="Expires at" helpText="The link stops working after this date and time. Leave it empty if it should not expire." disabled={disabled || busy} min={value.startsAt || undefined} value={value.expiresAt} onChange={expiresAt => onChange({ ...value, expiresAt })} />
     </div>
+    {user && <AccessCodeField value={value.accessCode} isProtected={isProtected} disabled={disabled || busy} onChange={accessCode => onChange({ ...value, accessCode })} />}
     {error && <p role="alert">{error} <Tooltip text="Reload tags and folders"><button type="button" onClick={() => setReload(reload + 1)}>Retry</button></Tooltip></p>}
     {tagPickerOpen && <TagPickerModal id={`${id}-tag-picker`} tags={organization.tags} selected={value.tagIds} disabled={disabled || busy} onChange={tagIds => onChange({ ...value, tagIds })} onClose={() => setTagPickerOpen(false)} />}
   </fieldset>;

@@ -29,7 +29,7 @@ export function QleanMenu({ logo, theme, onThemeChange }: QleanMenuProps) {
         <div className="qlean-menu__pages">
           <NavLink to="/shortenurl">
             <Link2 size={18} aria-hidden="true" />
-            Short URL
+            Shorten URL
           </NavLink>
           <NavLink to="/qr-maker">
             <QrCode size={18} aria-hidden="true" />

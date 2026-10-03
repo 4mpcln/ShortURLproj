@@ -4,9 +4,10 @@ import { useEffect, useLayoutEffect, useRef, useState, type FormEvent } from 're
 import '../styles/qr-maker.css';
 import { useAuth } from '../auth/AuthContext';
 import { getShortURLAPI, type ShortUrl, type QrOptionsStyle } from '../api/generated/shortUrl';
-import { LinkOrganization, emptyMetadata, metadataPayload, libraryError } from '../components/LinkOrganization';
+import { LinkOrganization, metadataPayload, libraryError } from '../components/LinkOrganization';
 import { Toast } from '../components/ui/toast';
 import { createQrCode } from '../lib/qrCode';
+import { useOrganizationOptions, usePageOptions } from '../lib/usePageOptions';
 
 const styles: { name: string; type: DotType }[] = [
   { name: 'Classic', type: 'square' },
@@ -28,15 +29,22 @@ const colors = [
 
 export function QrMakerPage() {
   const { user, loading } = useAuth();
-  const [metadata, setMetadata] = useState(emptyMetadata);
+  const { params, updateOptions } = usePageOptions();
+  const [metadata, setMetadata] = useOrganizationOptions(user?.id);
   const [title, setTitle] = useState('');
   const [saved, setSaved] = useState<ShortUrl | null>(null);
-  const [expanded, setExpanded] = useState(false);
+  const expanded = params.get('advanced') === 'true';
+  const [hasOpened, setHasOpened] = useState(expanded);
+  function setExpanded(value: boolean) { updateOptions({ advanced: value ? 'true' : null }); }
   const [generating, setGenerating] = useState(false);
   const [content, setContent] = useState('');
-  const [style, setStyle] = useState<DotType>('square');
-  const [color, setColor] = useState('#161616');
-  const [size, setSize] = useState(300);
+  const style = styles.find(option => option.type === params.get('style'))?.type || 'square';
+  const color = colors.find(option => option.value === params.get('color'))?.value || '#161616';
+  const requestedSize = Number(params.get('size'));
+  const size = [300, 600, 1000].includes(requestedSize) ? requestedSize : 300;
+  function setStyle(value: DotType) { updateOptions({ style: value }); }
+  function setColor(value: string) { updateOptions({ color: value }); }
+  function setSize(value: number) { updateOptions({ size: String(value) }); }
   const [ready, setReady] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const [error, setError] = useState('');
@@ -48,9 +56,10 @@ export function QrMakerPage() {
   const lastSaved = useRef<{ key: string; item: ShortUrl } | null>(null);
 
   useEffect(() => {
-    setMetadata(emptyMetadata); setTitle(''); setExpanded(false);
+    setTitle('');
     lastSaved.current = null;
   }, [user?.id]);
+  useEffect(() => { if (expanded) setHasOpened(true); }, [expanded]);
 
   useLayoutEffect(() => {
     generation.current += 1;
@@ -176,7 +185,7 @@ export function QrMakerPage() {
             </div>
             <div className="qr-below-size">
               {user && <>
-                <button className="qr-advanced-toggle" type="button" aria-expanded={expanded} aria-controls="qr-advanced-options" onClick={() => setExpanded(!expanded)}>Advanced options<ChevronDown size={18} aria-hidden="true" /></button>
+                <button className={`qr-advanced-toggle${hasOpened ? '' : ' qr-advanced-toggle--bounce'}`} type="button" aria-expanded={expanded} aria-controls="qr-advanced-options" onClick={() => { setHasOpened(true); setExpanded(!expanded); }}>Advanced options<ChevronDown size={18} aria-hidden="true" /></button>
                 <fieldset id="qr-advanced-options" className="qr-advanced-options" hidden={!expanded} disabled={!expanded || generating || downloading}>
                   <label className="qr-size-label">Title<input maxLength={160} value={title} onChange={event => setTitle(event.target.value)} placeholder="Campaign, document, or note" /></label>
                   <LinkOrganization value={metadata} onChange={setMetadata} disabled={!expanded || generating || downloading} />

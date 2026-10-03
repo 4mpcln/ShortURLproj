@@ -7,6 +7,7 @@ export const metadataShape = {
   folderId: z.string().uuid().nullable().optional(),
   startsAt: z.string().datetime({ offset: true }).nullable().optional(),
   expiresAt: z.string().datetime({ offset: true }).nullable().optional(),
+  accessCode: z.string().regex(/^\d{6}$/, 'Access code must contain exactly six digits.').nullable().optional(),
 };
 
 export type LinkMetadata = {
@@ -14,6 +15,7 @@ export type LinkMetadata = {
   folderId?: string | null;
   startsAt?: string | null;
   expiresAt?: string | null;
+  accessCode?: string | null;
 };
 
 export function validateSchedule(input: LinkMetadata) {
@@ -26,6 +28,11 @@ export function validateSchedule(input: LinkMetadata) {
 
 export async function validateMetadata(input: LinkMetadata, userId?: string, db: Pick<PoolClient, 'query'> = pool) {
   validateSchedule(input);
+  if (input.accessCode && !userId) {
+    const error = new Error('Log in to protect a link with an access code.');
+    error.name = 'ValidationError';
+    throw error;
+  }
   const hasMetadata = input.tagIds?.length || input.folderId || input.startsAt || input.expiresAt;
   if (!hasMetadata) return;
   const invalid = () => { const error = new Error('Choose tags and folders belonging to your account.'); error.name = 'ValidationError'; return error; };

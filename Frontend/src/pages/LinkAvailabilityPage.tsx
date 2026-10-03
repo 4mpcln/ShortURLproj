@@ -29,7 +29,10 @@ export function LinkAvailabilityPage() {
       if (!active) return;
       setAccess(data);
       // The redirect endpoint enforces the schedule again and records the visit.
-      if (data.status === 'active') window.location.replace(data.shortUrl);
+      if (data.status === 'active') {
+        if (data.hasAccessCode) navigate(`/link-access/${encodeURIComponent(code)}`, { replace: true });
+        else window.location.replace(data.shortUrl);
+      }
     }).catch(err => {
       if (active) setError(isAxiosError(err) && err.response?.status === 404 ? 'missing' : 'network');
     }).finally(() => { if (active) setLoading(false); });

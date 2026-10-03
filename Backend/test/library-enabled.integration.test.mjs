@@ -23,7 +23,7 @@ test('owners can pause URL and QR access without recording visits or changing sc
     return { status: response.status, json: await response.json(), cookie: response.headers.get('set-cookie')?.split(';')[0] };
   }
   async function member() {
-    const result = await call('/api/auth/register', null, { name: 'Enable test', email: `enable-${randomUUID()}@example.com`, password: 'Enabled-test-123' });
+    const result = await call('/api/auth/register', null, { name: `Enable test ${randomUUID()}`, email: `enable-${randomUUID()}@example.com`, password: 'Enabled-test-123' });
     assert.equal(result.status, 201); users.push(result.json.data.id); return result;
   }
   const owner = await member(), other = await member();

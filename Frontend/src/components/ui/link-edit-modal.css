@@ -21,7 +21,7 @@
 .link-edit-modal__footer p { margin: 0 0 12px; color: #f39898; font-size: 13px; overflow-wrap: anywhere; }
 .link-edit-modal .link-edit-modal__save { color: #17181a; background: #f2f2f3; }
 [data-theme=light] .link-edit-modal { --edit-line: #0003; --edit-muted: #62626b; background: #fffffff5; color: #242426; }
-[data-theme=light] .link-edit-modal__field input, [data-theme=light] .link-edit-modal textarea, [data-theme=light] .link-edit-modal button { background: #00000004; }
+[data-theme=light] .link-edit-modal__field input, [data-theme=light] .link-edit-modal textarea, [data-theme=light] .link-edit-modal button:where(:not(.help-tooltip__trigger)) { background: #00000004; }
 [data-theme=light] .link-edit-modal .link-edit-modal__save { background: #242426; color: #fff; }
 [data-theme=light] .link-edit-modal__footer p { color: #b52336; }
 @media(max-width:520px) { .link-edit-modal__header { padding: 18px; } .link-edit-modal__fields { padding: 18px; } .link-edit-modal__footer { padding: 14px 18px; } }

@@ -35,6 +35,8 @@ services:
       dockerfile: Backend/Dockerfile
     restart: unless-stopped
     init: true
+    volumes:
+      - shorturl_backend_keys:/app/Backend/.data
     environment:
       NODE_ENV: development
       PORT: 3211
@@ -58,23 +60,6 @@ services:
       start_period: 20s
       retries: 10
 
-  frontend:
-    profiles:
-      - frontend
-    build:
-      context: .
-      dockerfile: Frontend/Dockerfile
-    restart: unless-stopped
-    ports:
-      - "${FRONTEND_PORT:-3210}:3210"
-    depends_on:
-      backend:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:3210/healthz"]
-      interval: 5s
-      timeout: 3s
-      retries: 10
-
 volumes:
   shorturl_postgres_data:
+  shorturl_backend_keys:

@@ -6,7 +6,8 @@
   --form-input: rgb(255 255 255 / 32%);
   max-width: 1280px;
   margin: 0 auto;
-  padding: 32px 42px 48px;
+  padding: 32px var(--page-gutter) calc(48px + env(safe-area-inset-bottom));
+  padding-inline: max(var(--page-gutter), env(safe-area-inset-left)) max(var(--page-gutter), env(safe-area-inset-right));
 }
 
 [data-theme="dark"] .shorten-page {
@@ -159,7 +160,7 @@
 @keyframes options-reveal { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
 
 @media (max-width: 760px) {
-  .shorten-page { padding: 24px 18px 40px; }
+  .shorten-page { padding-block: 24px calc(40px + env(safe-area-inset-bottom)); }
   .shorten-intro { margin-bottom: 20px; }
   .shorten-intro h1 { font-size: 32px; }
   .shorten-intro p { font-size: 16px; }
@@ -177,6 +178,10 @@
   .shorten-creator .shorten-submit { width: 100%; height: 52px; }
   .shorten-creator .form-grid { grid-template-columns: minmax(0, 1fr); }
   .shorten-intro h1 { font-size: 28px; }
+  .shorten-creator { padding: 20px 18px 12px; }
+  .shorten-url-input { height: 56px; }
+  .recent-links-list .result { padding: 16px; gap: 14px; }
+  .recent-links-list .row-actions { justify-content: flex-end; }
 }
 
 @media (prefers-reduced-motion: reduce) {

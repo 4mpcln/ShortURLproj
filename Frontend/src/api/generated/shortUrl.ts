@@ -22,6 +22,38 @@ export interface CreateShortUrlRequest {
   startsAt?: string | null;
   /** @nullable */
   expiresAt?: string | null;
+  /**
+   * @nullable
+   * @pattern ^[0-9]{6}$
+   */
+  accessCode?: string | null;
+}
+
+export interface UnlockLinkRequest {
+  /**
+   * @minLength 6
+   * @maxLength 6
+   * @pattern ^[0-9]{6}$
+   */
+  accessCode: string;
+}
+
+export type UnlockLinkResponseDataKind = typeof UnlockLinkResponseDataKind[keyof typeof UnlockLinkResponseDataKind];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const UnlockLinkResponseDataKind = {
+  url: 'url',
+  qr: 'qr',
+} as const;
+
+export type UnlockLinkResponseData = {
+  originalUrl: string;
+  kind: UnlockLinkResponseDataKind;
+};
+
+export interface UnlockLinkResponse {
+  data: UnlockLinkResponseData;
 }
 
 export type ShortUrlKind = typeof ShortUrlKind[keyof typeof ShortUrlKind];
@@ -72,6 +104,7 @@ export interface ShortUrl {
   expiresAt: string | null;
   isPinned: boolean;
   isEnabled: boolean;
+  hasAccessCode: boolean;
   tags: Tag[];
   /** @nullable */
   qrOptions: ShortUrlQrOptions;
@@ -98,6 +131,7 @@ export type LinkAccessResponseData = {
   /** @nullable */
   startsAt: string | null;
   shortUrl: string;
+  hasAccessCode: boolean;
 };
 
 export interface LinkAccessResponse {
@@ -128,19 +162,46 @@ export interface SessionResponse {
   data: SessionResponseData;
 }
 
-export interface LoginRequest {
-  email: string;
-  /** @minLength 1 */
+export type LoginRequestOneOf = {
+  /**
+   * Unique username (the existing account name) or email, matched case-insensitively with surrounding whitespace ignored.
+   * @minLength 1
+   * @maxLength 254
+   */
+  identifier: string;
+  /**
+   * At most 72 UTF-8 bytes
+   * @minLength 1
+   */
   password: string;
-}
+};
+
+/**
+ * Legacy email-only login request. Use identifier for new clients.
+ */
+export type LoginRequestOneOfTwo = {
+  /** @maxLength 254 */
+  email: string;
+  /**
+   * At most 72 UTF-8 bytes
+   * @minLength 1
+   */
+  password: string;
+};
+
+export type LoginRequest = LoginRequestOneOf | LoginRequestOneOfTwo;
 
 export interface RegisterRequest {
   /**
+   * Unique username, matched case-insensitively with surrounding whitespace ignored.
    * @minLength 1
    * @maxLength 80
    */
   name: string;
-  /** @maxLength 254 */
+  /**
+   * Unique email address, matched case-insensitively with surrounding whitespace ignored.
+   * @maxLength 254
+   */
   email: string;
   /**
    * At most 72 UTF-8 bytes
@@ -212,6 +273,11 @@ export interface CreateQr {
   startsAt?: string | null;
   /** @nullable */
   expiresAt?: string | null;
+  /**
+   * @nullable
+   * @pattern ^[0-9]{6}$
+   */
+  accessCode?: string | null;
 }
 
 export interface TagResponse {
@@ -240,6 +306,11 @@ export interface UpdateLink {
   startsAt?: string | null;
   /** @nullable */
   expiresAt?: string | null;
+  /**
+   * @nullable
+   * @pattern ^[0-9]{6}$
+   */
+  accessCode?: string | null;
 }
 
 export interface PinRequest {
@@ -256,8 +327,14 @@ export type StatisticsResponseDataDailyItem = {
 };
 
 export type StatisticsResponseData = {
+  /** Expiry of the cached daily statistics; at most five minutes after collection. */
   cacheExpiresAt?: string;
   item: ShortUrl;
+  /**
+   * Access code, visible only to the authenticated owner in statistics.
+   * @nullable
+   */
+  accessCode?: string | null;
   daily: StatisticsResponseDataDailyItem[];
 };
 
@@ -310,6 +387,21 @@ const getShortUrl = (
  ) => {
       return apiClient<ShortUrlResponse>(
       {url: `/api/short-urls/${code}`, method: 'GET'
+    },
+      );
+    }
+
+/**
+ * @summary Verify a six-digit access code and record an authorized visit
+ */
+const unlockLink = (
+    code: string,
+    unlockLinkRequest: UnlockLinkRequest,
+ ) => {
+      return apiClient<UnlockLinkResponse>(
+      {url: `/api/short-urls/${code}/unlock`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: unlockLinkRequest
     },
       );
     }
@@ -467,10 +559,11 @@ const getStatistics = (
       );
     }
 
-return {listShortUrls,createShortUrl,getShortUrl,getLinkAccess,loginUser,registerUser,getCurrentUser,logoutUser,listMyLinks,getOrganization,createTag,createFolder,saveQr,updateLink,deleteLink,pinLink,getStatistics}};
+return {listShortUrls,createShortUrl,getShortUrl,unlockLink,getLinkAccess,loginUser,registerUser,getCurrentUser,logoutUser,listMyLinks,getOrganization,createTag,createFolder,saveQr,updateLink,deleteLink,pinLink,getStatistics}};
 export type ListShortUrlsResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getShortURLAPI>['listShortUrls']>>>
 export type CreateShortUrlResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getShortURLAPI>['createShortUrl']>>>
 export type GetShortUrlResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getShortURLAPI>['getShortUrl']>>>
+export type UnlockLinkResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getShortURLAPI>['unlockLink']>>>
 export type GetLinkAccessResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getShortURLAPI>['getLinkAccess']>>>
 export type LoginUserResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getShortURLAPI>['loginUser']>>>
 export type RegisterUserResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getShortURLAPI>['registerUser']>>>

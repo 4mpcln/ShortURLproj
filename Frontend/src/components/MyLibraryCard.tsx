@@ -1,4 +1,4 @@
-import { BarChart3, CalendarClock, Folder, Link2, Pin, PinOff, QrCode } from 'lucide-react';
+import { BarChart3, CalendarClock, Folder, Link2, LockKeyhole, Pin, PinOff, QrCode } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import type { ShortUrl } from '../api/generated/shortUrl';
 import { formatDate } from '../lib/formatDate';
@@ -41,6 +41,7 @@ export function MyLibraryCard({ item, disabled = false, onPin, onToggleEnabled, 
       {item.tags.length ? item.tags.map(entry => <span className="library-tag" key={entry.id} title={entry.name}><i style={{ background: entry.color }} /><span>{entry.name}</span></span>) : <span className="library-placeholder">No tags</span>}
     </div>
     <div className="library-item-metadata">
+      {item.hasAccessCode && <span className="library-protected"><LockKeyhole size={14} aria-hidden="true" />Encrypted</span>}
       <p className="library-meta"><Folder size={16} /><span title={item.folderName || 'No folder'}>{item.folderName || 'No folder'}</span></p>
       <p className="library-meta library-schedule"><CalendarClock size={16} /><span title={schedule}>{schedule}</span></p>
     </div>

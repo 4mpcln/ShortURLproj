@@ -1,0 +1,21 @@
+.access-code-field { --password-set-background: #e6f3ee; --password-set-border: #197d6b80; --password-set-text: #11654f; display: grid; gap: 9px; min-width: 0; }
+.access-code-field__heading { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; min-height: 24px; }
+.access-code-field__label { font-size: 14px; }
+.access-code-field__optional { color: var(--form-muted, var(--qr-muted, var(--edit-muted, #56565f))); font-size: 12px; }
+:root[data-theme] .organization .access-code-field__button[aria-pressed] { width: 100%; min-height: 46px; padding: 12px; gap: 10px; background: transparent; border-color: #8886; color: inherit; text-align: left; }
+.access-code-field__button > span { flex: 1; min-width: 0; }
+.access-code-field__button > svg { flex-shrink: 0; }
+:root[data-theme] .organization .access-code-field__button[aria-pressed=true] { background: var(--password-set-background); border-color: var(--password-set-border); color: var(--password-set-text); }
+[data-theme=dark] .access-code-field { --password-set-background: #153e35; --password-set-border: #4bb99c80; --password-set-text: #85e1c8; }
+.access-code-form { display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; }
+.access-code-form label { display: grid; gap: 10px; font-size: 14px; }
+.access-code-entry { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; min-width: 0; font-size: 14px; }
+.access-code-status { min-height: 20px; margin: 0; text-align: center; font-size: 14px; color: #35aa95; }
+[data-theme=light] .access-code-status { color: #197d6b; }
+.access-code-form footer { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
+.access-code-form p[role=alert] { margin: 0; font-size: 13px; color: #d65b5b; }
+.access-code-form pre { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; font: inherit; max-height: 50svh; overflow: auto; }
+.library-protected { display: inline-flex; gap: 6px; align-items: center; color: var(--library-muted); font-size: 12px; }
+.library-protected svg { flex-shrink: 0; }
+.statistics-access-code { font-variant-numeric: tabular-nums; }
+.link-access-page { display: grid; min-height: 70svh; place-items: center; }

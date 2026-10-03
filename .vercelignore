@@ -1,0 +1,15 @@
+.git
+.agents
+.codex
+.aws
+skills-lock.json
+.DS_Store
+**/.DS_Store
+**/.env
+**/.env.*
+**/.data
+**/node_modules
+**/dist
+**/*.log
+**/*.tsbuildinfo
+**/coverage

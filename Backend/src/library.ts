@@ -4,7 +4,7 @@ import { customAlphabet } from 'nanoid';
 import { currentUser } from './auth.js';
 import { pool } from './db.js';
 import { metadataShape, validateMetadata } from './linkMetadata.js';
-import { createShortUrl, deleteOwnedLink, findOwnedLink, updateOwnedLink } from './shortUrlRepository.js';
+import { createShortUrl, deleteOwnedLink, findOwnedAccessCode, findOwnedLink, updateOwnedLink } from './shortUrlRepository.js';
 import { createShortUrlSchema, toShortUrl } from './shortUrlService.js';
 import { statisticsCache } from './redis.js';
 
@@ -102,6 +102,7 @@ libraryRouter.get('/links/:id/statistics', async (req, res, next) => {
     const id = idSchema.parse(req.params.id);
     const item = await findOwnedLink(id, currentUser(res)!.id);
     if (!item) { res.status(404).json({ message: 'Item not found.' }); return; }
+    const accessCode = await findOwnedAccessCode(id, currentUser(res)!.id);
     const query = z.object({
       days: z.coerce.number().int().min(1).max(90).optional(),
       startDate: dateOnlySchema.optional(),
@@ -118,7 +119,7 @@ libraryRouter.get('/links/:id/statistics', async (req, res, next) => {
         GROUP BY d.day ORDER BY d.day`, [id,query.startDate,query.endDate]);
       if (!result.rows.length) { res.status(400).json({ message: 'Date range can include at most 366 days.' }); return; }
       res.setHeader('Cache-Control', 'private, no-store');
-      res.json({ data: { item: { ...item, shortUrl: toShortUrl(item.code) }, daily: result.rows, cacheExpiresAt: new Date(Date.now() + 5 * 60 * 1000).toISOString() } });
+      res.json({ data: { item: { ...item, shortUrl: toShortUrl(item.code) }, accessCode, daily: result.rows, cacheExpiresAt: new Date(Date.now() + 5 * 60 * 1000).toISOString() } });
       return;
     }
     const days = query.days ?? 30;
@@ -131,6 +132,6 @@ libraryRouter.get('/links/:id/statistics', async (req, res, next) => {
       return result.rows;
     });
     res.setHeader('Cache-Control', 'private, no-store');
-    res.json({ data: { item: { ...item, shortUrl: toShortUrl(item.code) }, daily: cached.daily, cacheExpiresAt: new Date(cached.expiresAt).toISOString() } });
+    res.json({ data: { item: { ...item, shortUrl: toShortUrl(item.code) }, accessCode, daily: cached.daily, cacheExpiresAt: new Date(cached.expiresAt).toISOString() } });
   } catch (error) { next(error); }
 });

@@ -17,9 +17,9 @@ test('member library: persistent organization, ownership, pinning, scheduling an
     return { status: response.status, json: await response.json(), cookie: response.headers.get('set-cookie')?.split(';')[0] };
   }
   const email = `library-${randomUUID()}@example.com`, password = 'Library-test-123';
-  const a = await call('/api/auth/register', null, { name: 'Library A', email, password });
+  const a = await call('/api/auth/register', null, { name: `Library A ${randomUUID()}`, email, password });
   assert.equal(a.status, 201); users.push(a.json.data.id);
-  const b = await call('/api/auth/register', null, { name: 'Library B', email: `library-${randomUUID()}@example.com`, password });
+  const b = await call('/api/auth/register', null, { name: `Library B ${randomUUID()}`, email: `library-${randomUUID()}@example.com`, password });
   assert.equal(b.status, 201); users.push(b.json.data.id);
   const organization = await call('/api/library/organization', a.cookie);
   assert.deepEqual(organization.json.tags.map(tag => tag.name), ['Campaign','Examination','Social']);
@@ -60,7 +60,8 @@ test('member library: persistent organization, ownership, pinning, scheduling an
     if (schedule.startsAt) assert.equal(new URL(visit.headers.get('location')).pathname, `/link-unavailable/${created.json.data.code}`);
     const access = await call(`/api/short-urls/${created.json.data.code}/access`);
     assert.equal(access.status, 200);
-    assert.deepEqual(Object.keys(access.json.data).sort(), ['shortUrl', 'startsAt', 'status']);
+    assert.deepEqual(Object.keys(access.json.data).sort(), ['hasAccessCode', 'shortUrl', 'startsAt', 'status']);
+    assert.equal(access.json.data.hasAccessCode, false);
     assert.equal(access.json.data.status, schedule.startsAt ? 'scheduled' : 'expired');
     assert.equal(access.json.data.startsAt, schedule.startsAt || null);
     assert.equal(access.json.data.shortUrl, created.json.data.shortUrl);

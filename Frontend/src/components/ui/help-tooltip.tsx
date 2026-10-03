@@ -6,19 +6,22 @@ import './help-tooltip.css';
 export function HelpTooltip({ label, text }: { label: string; text: string }) {
   const id = useId();
   const button = useRef<HTMLButtonElement>(null);
+  const bubble = useRef<HTMLSpanElement>(null);
   const [open, setOpen] = useState(false);
   const [position, setPosition] = useState({ left: 16, top: 0, width: 260 });
 
   useLayoutEffect(() => {
-    if (!open || !button.current) return;
+    if (!open || !button.current || !bubble.current) return;
     const rect = button.current.getBoundingClientRect();
+    const hint = bubble.current.getBoundingClientRect();
     const width = Math.min(260, window.innerWidth - 32);
+    const gap = 8;
     setPosition({
       left: Math.max(16, Math.min(rect.left + rect.width / 2 - width / 2, window.innerWidth - width - 16)),
-      top: rect.top - 8,
+      top: Math.max(gap, Math.min(rect.top >= hint.height + gap * 2 ? rect.top - hint.height - gap : rect.bottom + gap, window.innerHeight - hint.height - gap)),
       width,
     });
-  }, [open]);
+  }, [open, text]);
 
   useEffect(() => {
     if (!open) return;
@@ -40,6 +43,7 @@ export function HelpTooltip({ label, text }: { label: string; text: string }) {
     <span className="help-tooltip">
       <button
         ref={button}
+        className="help-tooltip__trigger"
         type="button"
         aria-label={label}
         aria-describedby={open ? id : undefined}
@@ -48,13 +52,15 @@ export function HelpTooltip({ label, text }: { label: string; text: string }) {
         onFocus={() => setOpen(true)}
         onBlur={() => setOpen(false)}
         onClick={() => setOpen(true)}
-        onKeyDown={event => { if (event.key === 'Escape') setOpen(false); }}
+        onKeyDown={event => {
+          if (event.key === 'Escape' && open) { event.preventDefault(); event.stopPropagation(); setOpen(false); }
+        }}
       >
         <CircleHelp size={16} aria-hidden="true" />
       </button>
       {open && createPortal(
-        <span id={id} role="tooltip" className="help-tooltip__content" style={position}>{text}</span>,
-        document.body,
+        <span ref={bubble} id={id} role="tooltip" className="help-tooltip__content" style={position}>{text}</span>,
+        button.current?.closest('dialog') || document.body,
       )}
     </span>
   );

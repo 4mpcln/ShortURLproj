@@ -3,7 +3,7 @@ import { config } from './config.js';
 import { createStatisticsCache } from './statisticsCache.js';
 
 const client = createClient({
-  url: config.redisUrl,
+  url: config.redisUrl || undefined,
   disableOfflineQueue: true,
   socket: { connectTimeout: 1000, reconnectStrategy: retries => Math.min(250 * (retries + 1), 5000) },
 });
@@ -15,6 +15,6 @@ client.on('error', () => {
 client.on('ready', () => { warned = false; });
 
 export function startCache() {
-  if (!client.isOpen) void client.connect().catch(() => {});
+  if (config.redisUrl && !client.isOpen) void client.connect().catch(() => {});
 }
 export const statisticsCache = createStatisticsCache(client);

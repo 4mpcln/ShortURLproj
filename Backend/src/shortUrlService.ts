@@ -47,6 +47,7 @@ export async function createUniqueShortUrl(input: CreateShortUrlInput, userId?: 
       title: parsed.title || undefined,
       userId,
       tagIds: parsed.tagIds, folderId: parsed.folderId, startsAt: parsed.startsAt, expiresAt: parsed.expiresAt,
+      accessCode: parsed.accessCode,
     });
   }
 
@@ -60,6 +61,7 @@ export async function createUniqueShortUrl(input: CreateShortUrlInput, userId?: 
         title: parsed.title || undefined,
         userId,
         tagIds: parsed.tagIds, folderId: parsed.folderId, startsAt: parsed.startsAt, expiresAt: parsed.expiresAt,
+        accessCode: parsed.accessCode,
       });
     }
   }

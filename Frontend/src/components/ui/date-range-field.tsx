@@ -33,7 +33,7 @@ export function DateRangeField({ value, disabled = false, onChange }: { value: {
     </button>
     {open && <Modal title="Custom range" onClose={() => setOpen(false)}>
       <div className="schedule-dialog date-range-dialog">
-        <DayPicker mode="range" selected={range} onSelect={setRange} month={from} showOutsideDays fixedWeeks />
+        <DayPicker mode="range" selected={range} onSelect={setRange} defaultMonth={from} showOutsideDays fixedWeeks />
         <div className="schedule-dialog__summary" aria-live="polite">{from && to ? `${dateLabel.format(from)} - ${dateLabel.format(to)}` : 'Select a start and end date'}</div>
         <footer><button type="button" onClick={() => setOpen(false)}>Cancel</button><button type="button" className="shared-modal__primary" disabled={!from || !to} onClick={() => { if (!from || !to) return; onChange({ startDate: localDate(from), endDate: localDate(to) }); setOpen(false); }}>Apply</button></footer>
       </div>

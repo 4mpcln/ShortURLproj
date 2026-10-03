@@ -25,7 +25,7 @@
 .organization-folder > div > .ui-tooltip { flex-shrink: 0; }
 .organization-schedule { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 16px; align-items: start; }
 .organization p { font-size: 13px; color: #f39898; margin: 0; }
-:root[data-theme=light] .organization input, :root[data-theme=light] .organization select, :root[data-theme=light] .organization button { background: #ffffff60; border-color: #0003; color-scheme: light; }
+:root[data-theme=light] .organization input, :root[data-theme=light] .organization select, :root[data-theme=light] .organization button:where(:not(.help-tooltip__trigger)) { background-color: #ffffff60; border-color: #0003; color-scheme: light; }
 :root[data-theme=light] .organization button[aria-pressed=true] { border-color: #333; background: #ffffffb0; }
 :root[data-theme=light] .organization select { background-image: url("data:image/svg+xml,%3Csvg width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%23202023' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E"); }
 :root[data-theme=light] .organization option { background: white; color: #222; }
@@ -93,3 +93,9 @@
 :root[data-theme=light] .schedule-time-wheel::before { background: #0000000d; }
 :root[data-theme=light] .organization .schedule-time-wheel button[aria-selected=true] { background: #00000010; }
 @media(max-width:520px) { .organization-schedule { grid-template-columns: minmax(0,1fr); } }
+@media(max-width:480px) {
+  .organization-editor > input:not([type=color]) { flex-basis: 100%; }
+  .organization-editor > input[type=color] { flex-shrink: 0; }
+  .organization-folder > div > .ui-tooltip > button { width: 48px; height: 48px; padding: 10px; }
+  .organization legend { line-height: 1.4; }
+}

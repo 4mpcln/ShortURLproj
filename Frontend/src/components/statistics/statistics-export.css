@@ -2,10 +2,11 @@
 .my-links-page .statistics-export-buttons button { min-height: 34px; padding: 7px 9px; font-size: 12px; white-space: nowrap; background: var(--library-surface); color: inherit; border-color: var(--library-line); }
 .my-links-page .statistics-export-buttons button:hover:not(:disabled) { background: #80808020; }
 .statistics-export-buttons svg { flex-shrink: 0; }
-@media (max-width: 480px) {
-  .statistics-export-buttons { gap: 6px; width: 100%; justify-content: flex-end; }
-  .my-links-page .statistics-export-buttons button { padding: 6px; gap: 4px; font-size: 11px; }
-  .statistics-export-buttons svg { width: 14px; height: 14px; }
+@media (max-width: 600px) {
+  .statistics-export-buttons { gap: 8px; }
+  .statistics-export-buttons__label { display: none; }
+  .my-links-page .statistics-export-buttons button { width: 44px; min-width: 44px; height: 44px; min-height: 44px; padding: 10px; }
+  .statistics-export-buttons svg { width: 18px; height: 18px; }
 }
 .statistics-pdf-form fieldset { border: 0; padding: 0; margin: 0; display: grid; gap: 12px; }
 .statistics-pdf-form legend { font-size: 13px; color: #808080; margin-bottom: 14px; }

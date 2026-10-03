@@ -13,6 +13,7 @@ export function AuthModal() {
   const dialog = useRef<HTMLDialogElement>(null);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
+  const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [confirmation, setConfirmation] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -48,12 +49,12 @@ export function AuthModal() {
     try {
       const response = register
         ? await api.registerUser({ name: name.trim(), email: email.trim(), password })
-        : await api.loginUser({ email: email.trim(), password });
+        : await api.loginUser({ identifier: identifier.trim(), password });
       signedIn(response.data);
     } catch (err) {
       if (isAxiosError<{ message?: string }>(err)) {
         setError(!err.response ? 'Cannot connect to the server. Please try again.'
-          : err.response.status === 400 ? 'Check your name, email and password. Use at least 8 characters when registering.'
+          : err.response.status === 400 ? register ? 'Check your name, email and password. Use at least 8 characters when registering.' : 'Enter your username or email and password.'
           : err.response.status >= 500 ? 'The server is unavailable. Please try again shortly.'
           : err.response.data?.message ?? 'Could not sign in. Please try again.');
       } else setError('Could not sign in. Please try again.');
@@ -83,7 +84,7 @@ export function AuthModal() {
       </div>
       <form onSubmit={submit}>
         {register && <label>Name<input autoComplete="name" required maxLength={80} value={name} onChange={event => setName(event.target.value)} /></label>}
-        <label>Email<input type="email" autoComplete="email" required maxLength={254} value={email} onChange={event => setEmail(event.target.value)} /></label>
+        <label>{register ? 'Email' : 'Username / Email'}<input type={register ? 'email' : 'text'} autoComplete={register ? 'email' : 'username'} autoCapitalize="none" spellCheck={false} required maxLength={254} value={register ? email : identifier} onChange={event => register ? setEmail(event.target.value) : setIdentifier(event.target.value)} /></label>
         <div className="auth-password">
           <label htmlFor="auth-password">Password</label>
           <div><input id="auth-password" type={showPassword ? 'text' : 'password'} autoComplete={register ? 'new-password' : 'current-password'} required minLength={register ? 8 : 1} value={password} onChange={event => setPassword(event.target.value)} />

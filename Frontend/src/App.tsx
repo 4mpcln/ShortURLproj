@@ -7,6 +7,7 @@ import { QrMakerPage } from './pages/QrMakerPage';
 import { MyLinksPage } from './pages/MyLinksPage';
 import { LinkStatisticsPage } from './pages/LinkStatisticsPage';
 import { LinkAvailabilityPage } from './pages/LinkAvailabilityPage';
+import { LinkAccessPage } from './pages/LinkAccessPage';
 import { useAuth, type AuthMode } from './auth/AuthContext';
 import { AuthModal } from './components/ui/auth-modal';
 
@@ -32,6 +33,7 @@ export function App() {
   const [theme, setTheme] = useState<Theme>(getTheme);
   const { promptGuest } = useAuth();
   const availabilityPage = useMatch('/link-unavailable/:code');
+  const accessPage = useMatch('/link-access/:code');
   const statisticsPage = useMatch('/my-links/:id');
 
   function handleToolClick(event: MouseEvent<HTMLDivElement>) {
@@ -48,7 +50,7 @@ export function App() {
   return (
     <div className={`app-background-shell${statisticsPage ? ' app-background-shell--statistics' : ''}`} onClickCapture={handleToolClick}>
       <AnimatedBackground />
-      {!availabilityPage && <QleanMenu theme={theme} onThemeChange={setTheme} />}
+      {!availabilityPage && !accessPage && <QleanMenu theme={theme} onThemeChange={setTheme} />}
       <Routes>
         <Route path="/" element={<Navigate to="/shortenurl" replace />} />
         <Route path="/shortenurl" element={<ShortenUrlPage />} />
@@ -58,9 +60,10 @@ export function App() {
         <Route path="/my-links" element={<MyLinksPage />} />
         <Route path="/my-links/:id" element={<LinkStatisticsPage />} />
         <Route path="/link-unavailable/:code" element={<LinkAvailabilityPage />} />
+        <Route path="/link-access/:code" element={<LinkAccessPage />} />
         <Route path="*" element={<main className="pending-page"><h1>Page not found</h1><Link to="/shortenurl">Back to Short URL</Link></main>} />
       </Routes>
-      {!availabilityPage && <AuthModal />}
+      {!availabilityPage && !accessPage && <AuthModal />}
     </div>
   );
 }

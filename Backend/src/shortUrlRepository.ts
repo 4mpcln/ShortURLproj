@@ -1,5 +1,6 @@
 import { pool } from './db.js';
 import { validateMetadata, type LinkMetadata } from './linkMetadata.js';
+import { decryptAccessCode, encryptAccessCode } from './accessCode.js';
 
 export type Tag = { id: string; name: string; color: string };
 
@@ -24,6 +25,7 @@ export type ShortUrl = {
   expiresAt: string | null;
   isPinned: boolean;
   isEnabled: boolean;
+  hasAccessCode: boolean;
   tags: Tag[];
   qrOptions: { style: string; color: string; size: number } | null;
   status: 'active' | 'scheduled' | 'expired' | 'disabled';
@@ -45,6 +47,7 @@ type ShortUrlRow = {
   expires_at: Date | null;
   is_pinned: boolean;
   is_enabled: boolean;
+  access_code_ciphertext: string | null;
   tags?: Tag[];
   qr_options: ShortUrl['qrOptions'];
 };
@@ -66,6 +69,7 @@ function mapRow(row: ShortUrlRow): ShortUrl {
     expiresAt: row.expires_at?.toISOString() ?? null,
     isPinned: row.is_pinned,
     isEnabled: row.is_enabled,
+    hasAccessCode: Boolean(row.access_code_ciphertext),
     tags: row.tags ?? [],
     qrOptions: row.qr_options,
     status: !row.is_enabled ? 'disabled' : row.expires_at && row.expires_at <= new Date() ? 'expired' : row.starts_at && row.starts_at > new Date() ? 'scheduled' : 'active',
@@ -85,11 +89,12 @@ export async function createShortUrl(input: {
     await client.query('BEGIN');
   const result = await client.query<ShortUrlRow>(
     `
-      INSERT INTO short_urls (code, original_url, title, user_id, kind, folder_id, starts_at, expires_at, qr_options)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+      INSERT INTO short_urls (code, original_url, title, user_id, kind, folder_id, starts_at, expires_at, qr_options, access_code_ciphertext)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
       RETURNING *
     `,
-    [input.code, input.originalUrl, input.title ?? null, input.userId ?? null, input.kind ?? 'url', input.folderId ?? null, input.startsAt ?? null, input.expiresAt ?? null, input.qrOptions ?? null],
+    [input.code, input.originalUrl, input.title ?? null, input.userId ?? null, input.kind ?? 'url', input.folderId ?? null, input.startsAt ?? null, input.expiresAt ?? null, input.qrOptions ?? null,
+      input.accessCode ? await encryptAccessCode(input.accessCode) : null],
   );
 
     const id = result.rows[0].id;
@@ -113,25 +118,26 @@ export async function findByCode(code: string) {
 
 export async function listShortUrls(limit = 20) {
   const result = await pool.query<ShortUrlRow>(
-    `${selectLinks} WHERE s.user_id IS NULL ORDER BY s.created_at DESC LIMIT $1`,
+    `${selectLinks} WHERE s.user_id IS NULL AND s.access_code_ciphertext IS NULL ORDER BY s.created_at DESC LIMIT $1`,
     [limit],
   );
 
   return result.rows.map(mapRow);
 }
 
-export async function registerClick(code: string) {
+export async function registerClick(code: string, verifiedCiphertext: string | null = null) {
   const result = await pool.query<ShortUrlRow>(
     `
       WITH accessed AS (
         UPDATE short_urls SET click_count = click_count + 1, last_clicked_at = NOW(), updated_at = NOW()
         WHERE code = $1 AND is_enabled AND (starts_at IS NULL OR starts_at <= NOW()) AND (expires_at IS NULL OR expires_at > NOW())
+          AND (access_code_ciphertext IS NULL OR access_code_ciphertext = $2)
         RETURNING *
       ), logged AS (
         INSERT INTO click_logs (short_url_id) SELECT id FROM accessed RETURNING short_url_id
       ) SELECT * FROM accessed
     `,
-    [code],
+    [code, verifiedCiphertext],
   );
 
   return result.rows[0] ? mapRow(result.rows[0]) : null;
@@ -147,6 +153,17 @@ export async function listUserShortUrls(userId: string) {
 export async function findOwnedLink(id: string, userId: string) {
   const result = await pool.query<ShortUrlRow>(`${selectLinks} WHERE s.id = $1 AND s.user_id = $2`, [id, userId]);
   return result.rows[0] ? mapRow(result.rows[0]) : null;
+}
+
+export async function findAccessCodeCiphertext(code: string) {
+  const result = await pool.query<{ access_code_ciphertext: string | null }>('SELECT access_code_ciphertext FROM short_urls WHERE code=$1', [code]);
+  return result.rows[0]?.access_code_ciphertext ?? null;
+}
+
+export async function findOwnedAccessCode(id: string, userId: string) {
+  const result = await pool.query<{ access_code_ciphertext: string | null }>('SELECT access_code_ciphertext FROM short_urls WHERE id=$1 AND user_id=$2', [id, userId]);
+  const value = result.rows[0]?.access_code_ciphertext;
+  return value ? decryptAccessCode(value) : null;
 }
 
 export async function updateOwnedLink(id: string, userId: string, input: { originalUrl?: string; title?: string; isEnabled?: boolean } & LinkMetadata) {
@@ -167,6 +184,10 @@ export async function updateOwnedLink(id: string, userId: string, input: { origi
     await client.query(`UPDATE short_urls SET original_url=$1,title=$2,folder_id=$3,starts_at=$4,expires_at=$5,is_enabled=$8,updated_at=NOW()
       WHERE id=$6 AND user_id=$7`, [input.originalUrl ?? current.originalUrl, input.title === undefined ? current.title : input.title || null,
       metadata.folderId, metadata.startsAt, metadata.expiresAt, id, userId, input.isEnabled ?? current.isEnabled]);
+    if (input.accessCode !== undefined) {
+      await client.query('UPDATE short_urls SET access_code_ciphertext=$1 WHERE id=$2 AND user_id=$3',
+        [input.accessCode ? await encryptAccessCode(input.accessCode) : null, id, userId]);
+    }
     if (input.tagIds !== undefined) {
       await client.query('DELETE FROM short_url_tags WHERE short_url_id=$1', [id]);
       if (input.tagIds.length) await client.query('INSERT INTO short_url_tags (short_url_id,tag_id) SELECT $1,unnest($2::uuid[]) ON CONFLICT DO NOTHING', [id, input.tagIds]);

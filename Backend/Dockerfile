@@ -17,6 +17,7 @@ RUN npm ci --workspace Backend --include-workspace-root=false --omit=dev --no-au
 COPY --from=build /app/Backend/dist ./Backend/dist
 COPY Backend/db ./Backend/db
 WORKDIR /app/Backend
+RUN mkdir -p /app/Backend/.data && chown node:node /app/Backend/.data
 USER node
 EXPOSE 3211
 CMD ["sh", "-c", "node dist/migrate.js && exec node dist/server.js"]

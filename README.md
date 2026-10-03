@@ -16,7 +16,7 @@ ShortURLproj/
   Frontend/            # React, Vite, and Orval API client
   Backend/             # Node.js API, OpenAPI spec, and database migrations
   docs/                # DFD and ER diagrams
-  docker-compose.yml   # PostgreSQL, Backend and Frontend
+  docker-compose.yml   # PostgreSQL, Redis and Backend
   package.json         # Shared workspace scripts
 ```
 
@@ -37,8 +37,18 @@ docker compose up
 ```
 
 This builds, if needed, and starts PostgreSQL, Redis and Backend. Backend waits for the
-database health check and applies migrations before starting. No local Node.js or
-npm install is needed. The existing PostgreSQL volume is reused.
+database health check and applies migrations before starting. These services do
+not need a local Node.js installation. The existing PostgreSQL volume is reused.
+
+Run Frontend locally with Node.js in a separate terminal:
+
+```bash
+npm install
+npm run dev:web
+```
+
+Frontend: http://localhost:3210. Vite serves the current source with hot reload
+and proxies `/api` requests to Backend on port 3211. Frontend is not a Docker service.
 
 - Backend health: http://localhost:3211/health
 - PostgreSQL: localhost:5432
@@ -53,7 +63,7 @@ outage falls back to PostgreSQL. For a local Backend process, set `REDIS_URL` in
 `Backend/.env` (default `redis://localhost:6379`); Compose uses `redis://redis:6379`.
 
 Use `docker compose up -d` to run in the background. Use `--build` after changing
-source code; this Docker setup serves a compiled build and does not use hot reload.
+Backend source code; Docker runs a compiled Backend build without hot reload.
 
 ```bash
 docker compose ps                    # inspect service health
@@ -61,28 +71,32 @@ docker compose logs -f backend       # read API and migration logs
 docker compose down                  # stop services; keep saved database data
 ```
 
-Stop any existing local dev servers using ports 3210/3211 before starting Docker.
-Alternatively, choose free ports (public URLs follow these ports by default):
+Keep port 3211 free for Docker's Backend. Frontend's Vite server uses port 3210.
+To use a different Backend port (public short URLs follow this port by default):
 
 ```bash
-FRONTEND_PORT=3220 BACKEND_PORT=3221 docker compose up -d --build
+BACKEND_PORT=3221 docker compose up -d --build
 ```
 
-To run the full Docker stack with Frontend too:
-
-```bash
-docker compose --profile frontend up
-```
-
-Frontend: http://localhost:3210
+When changing Backend's port, update the `/api` proxy target in
+`Frontend/vite.config.ts` to match. `FRONTEND_PORT` only sets Backend's default
+`WEB_ORIGIN`; choose Frontend's actual Vite port with its dev command.
 
 Optional Compose settings belong in a `.env` file beside `docker-compose.yml`;
 see the root `.env.example`. Backend/Frontend `.env` files are excluded from image
 builds. Inside Docker, Backend connects to `postgres:5432`; the browser uses
-Frontend's same-origin `/api` proxy. `SHORT_URL_BASE` must be reachable by the browser,
+Vite's same-origin `/api` proxy. `SHORT_URL_BASE` must be reachable by the browser,
 not a Docker service name. This Compose configuration uses development-mode auth
 for local HTTP; production HTTPS hosting needs secure production configuration.
 Without `JWT_SECRET`, restarting Backend invalidates existing login sessions.
+
+Signed-in users can protect URL and QR items with a six-digit access code. Visitors
+must enter the code before Backend returns the destination or QR content; rejected
+attempts do not count as visits. Library cards show only the protection status,
+and the code is returned only by the owner's authenticated statistics endpoint.
+Access codes are encrypted with AES-256-GCM. Docker preserves the encryption key
+in `shorturl_backend_keys`; a local Backend stores it in `Backend/.data/access-code.key`.
+Back up this key together with the database to retain access to protected links.
 
 ## Local Development
 
@@ -179,6 +193,19 @@ browser-tab session. Nevermind, Escape, or closing the dialog keeps guest access
 Members can save new short links and QR codes to their account and view them in My library;
 existing guest links are not automatically assigned to an account.
 
+Log in with an email address or the existing account Name as a username. Both
+are matched case-insensitively and surrounding whitespace is ignored. Names
+and emails are unique under the same rules; duplicate registrations return
+409 with a message identifying the conflicting field. Database unique indexes
+also prevent duplicates from concurrent requests. An identifier formatted as
+an email address is always treated as an email.
+The login API accepts `identifier` and `password`; legacy `email` and `password`
+requests remain supported.
+
+Migration `006_unique_account_identifiers.sql` adds these constraints without
+changing existing accounts. Any existing case-insensitive duplicates must be
+resolved before applying it.
+
 Short URL keeps the three most recently created links beneath its form, newest first.
 This small history survives navigation and reloads in the same browser tab using
 sessionStorage, with separate storage for guests and each signed-in account.
@@ -193,8 +220,13 @@ removes the item's click logs; reusable tags and folders remain. Editing and
 deleting also update the recent-link history. Both API operations require the
 owning account.
 
-Passwords are hashed with bcrypt. Sessions use a seven-day JWT in an HttpOnly,
-SameSite=Lax cookie, with Secure enabled in production. Set a stable `JWT_SECRET`
+Passwords are hashed with bcrypt. Sessions expire one hour after login or
+registration, using a JWT and matching one-hour HttpOnly cookie. Activity does
+not extend this deadline, and older tokens are also limited to one hour.
+Logging out or detecting expiration returns the browser to `/shortenurl`.
+The browser checks the session every minute while visible and when returning
+to the tab; authenticated API rejections also end the session.
+Sessions use a SameSite=Lax cookie, with Secure enabled in production. Set a stable `JWT_SECRET`
 of at least 32 characters in `Backend/.env` to keep sessions across server restarts.
 Development generates an ephemeral secret if unset; production requires a secret.
 The authentication endpoints limit login/registration attempts.
@@ -230,6 +262,51 @@ The configured public domain must route to this backend for redirects, tracking
 and schedules. Existing printed QR codes keep their encoded URL; changing the
 base URL does not rewrite them. Keep the old domain routing to this backend or
 regenerate QR codes after a domain change.
+
+## Vercel Deployment
+
+Production: https://qlean-three.vercel.app
+
+Production uses Neon Free with the existing schema and a separate, initially
+empty database. Local Docker data has not been migrated or modified.
+
+Deploy the repository root `ShortURLproj`, not the `Frontend` directory.
+`vercel.json` builds both workspaces, serves the Vite frontend, and routes API
+requests to the existing Express application through `api/index.mjs`. Browser
+routes support direct visits and refreshes. On Vercel, new short links use
+`https://<deployment-domain>/s/<code>` so aliases do not collide with app pages.
+Local development and Docker continue using port 3211 and their existing links.
+
+Configure these server-side environment variables in the Vercel project:
+
+- `NODE_ENV`: `production` to enable secure session cookies. The install command explicitly includes dev dependencies needed to build TypeScript.
+- `DATABASE_URL`: a hosted PostgreSQL connection string, with the provider's required TLS settings. Localhost and Docker service names are not reachable from Vercel.
+- `JWT_SECRET`: a stable random secret of at least 32 characters.
+- `ACCESS_CODE_KEY`: a stable 32-byte encryption key encoded as 64 hexadecimal characters. Preserve this key across deployments; if migrating existing protected links, use their existing encryption key.
+- `REDIS_URL`: optional hosted Redis connection string. Without it, statistics use PostgreSQL directly.
+
+Do not set `VITE_API_BASE_URL` for this deployment: the frontend uses same-origin
+`/api` requests, keeping session cookies on the website's domain. Vercel's system
+variables supply the default website and short-link origins. To use a custom
+domain, set `WEB_ORIGIN=https://<domain>` and `SHORT_URL_BASE=https://<domain>/s`.
+Use a separate database for preview environments to keep test data out of production.
+
+Apply the migrations to the hosted database before releasing the app. Set
+`DATABASE_URL` securely in the local environment, then run `npm run db:migrate`.
+This creates the schema; it does not copy users or links from the local database.
+Never expose PostgreSQL's local Docker port to the public internet.
+
+```bash
+npx vercel login
+npx vercel link
+npx vercel deploy --prod
+```
+
+After deployment, verify `/health`, registration/login, creation of a short link,
+its `/s/<code>` redirect, protected links and a direct visit to `/my-links`.
+Vercel references: [Vite hosting](https://vercel.com/docs/frameworks/frontend/vite),
+[Node.js functions](https://vercel.com/docs/functions/runtimes/node-js),
+and [hosted PostgreSQL](https://vercel.com/docs/postgres).
 
 ## API
 

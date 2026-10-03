@@ -23,7 +23,7 @@ test('library edits and deletion: owner-only, atomic metadata, stable aliases an
     return { status: response.status, json: text ? JSON.parse(text) : null, cookie: response.headers.get('set-cookie')?.split(';')[0] };
   }
   async function member(name) {
-    const result = await call('/api/auth/register', null, { name, email: `mutations-${randomUUID()}@example.com`, password: 'Mutations-test-123' });
+    const result = await call('/api/auth/register', null, { name: `${name} ${randomUUID()}`, email: `mutations-${randomUUID()}@example.com`, password: 'Mutations-test-123' });
     assert.equal(result.status, 201); users.push(result.json.data.id); return result;
   }
   const a = await member('Mutation A'), b = await member('Mutation B');

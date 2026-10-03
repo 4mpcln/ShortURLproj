@@ -7,6 +7,7 @@ import { Toast } from '../components/ui/toast';
 import { useAuth } from '../auth/AuthContext';
 import { LinkOrganization, emptyMetadata, metadataPayload } from '../components/LinkOrganization';
 import { useRecentShortUrls } from '../lib/useRecentShortUrls';
+import { useOrganizationOptions, usePageOptions } from '../lib/usePageOptions';
 import {
   CreateShortUrlRequest,
   createShortUrl,
@@ -23,16 +24,25 @@ const initialForm: FormState = {
 export function ShortenUrlPage() {
   const { user, loading } = useAuth();
   const { recentLinks, historyReady, remember } = useRecentShortUrls(loading ? null : user?.id || 'guest');
-  const [metadata, setMetadata] = useState(emptyMetadata);
-  const [phase, setPhase] = useState<'collapsed' | 'opening' | 'expanded' | 'closing'>('collapsed');
-  const [hasOpened, setHasOpened] = useState(false);
+  const { params, updateOptions } = usePageOptions();
+  const [metadata, setMetadata] = useOrganizationOptions(user?.id);
+  const advancedOpen = params.get('advanced') === 'true';
+  const [phase, setPhase] = useState<'collapsed' | 'opening' | 'expanded' | 'closing'>(advancedOpen ? 'expanded' : 'collapsed');
+  const [hasOpened, setHasOpened] = useState(advancedOpen);
   const expanded = phase === 'expanded' || phase === 'closing';
   const transitioning = phase === 'opening' || phase === 'closing';
   const [form, setForm] = useState<FormState>(initialForm);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState('');
   const [toast, setToast] = useState<{ id: number; message: string } | null>(null);
-  useEffect(() => { setMetadata(emptyMetadata); setMessage(''); }, [user?.id]);
+  useEffect(() => { setMessage(''); }, [user?.id]);
+
+  useEffect(() => {
+    if (advancedOpen) setHasOpened(true);
+    setPhase(current => advancedOpen
+      ? current === 'expanded' ? current : 'opening'
+      : current === 'collapsed' ? current : 'closing');
+  }, [advancedOpen]);
 
   useEffect(() => {
     if (!transitioning) return;
@@ -129,7 +139,7 @@ export function ShortenUrlPage() {
             <div className="alias-field">
               <div className="alias-field__heading">
                 <label htmlFor="custom-alias">Custom alias</label>
-                <HelpTooltip label="What is a custom alias?" text="ชื่อท้ายลิงก์ที่ตั้งเอง เช่น my-link ใน /my-link" />
+                <HelpTooltip label="What is a custom alias?" text="Specify a custom ending for your short URL. For example, the alias summer-sale creates a link such as https://qlean.example/summer-sale. Use 3-32 letters, numbers, hyphens or underscores." />
               </div>
               <input
                 id="custom-alias"
@@ -159,7 +169,7 @@ export function ShortenUrlPage() {
             disabled={transitioning}
             onClick={() => {
               setHasOpened(true);
-              setPhase(expanded ? 'closing' : 'opening');
+              updateOptions({ advanced: advancedOpen ? null : 'true' });
             }}
           >
             Advanced options

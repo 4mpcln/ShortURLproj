@@ -85,7 +85,7 @@ export function LinkEditModal({ item, onSaved, onClose }: LinkEditModalProps) {
         <div className="link-edit-modal__field"><label htmlFor={`${id}-content`}>{item.kind === 'qr' ? 'QR content' : 'Destination URL'}</label>
           {item.kind === 'qr' ? <textarea id={`${id}-content`} required maxLength={1000} rows={3} value={content} disabled={busy} onChange={event => setContent(event.target.value)} /> : <input id={`${id}-content`} type="url" required value={content} disabled={busy} onChange={event => setContent(event.target.value)} />}
         </div>
-        <LinkOrganization value={metadata} onChange={setMetadata} disabled={busy} />
+        <LinkOrganization value={metadata} onChange={setMetadata} disabled={busy} isProtected={item.hasAccessCode} />
       </div>
       <footer className="link-edit-modal__footer">
         {error && <p role="alert">{error}</p>}

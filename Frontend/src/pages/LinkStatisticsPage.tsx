@@ -1,4 +1,4 @@
-import { ChevronDown, ChevronLeft, Link2, Pencil, Pin, PinOff, Power, QrCode } from 'lucide-react';
+import { CalendarClock, CalendarX2, ChevronDown, ChevronLeft, Folder, Link2, LockKeyhole, Pencil, Pin, PinOff, Power, QrCode } from 'lucide-react';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { getShortURLAPI, type ShortUrl, type StatisticsResponse } from '../api/generated/shortUrl';
@@ -19,9 +19,10 @@ import { removeRecentShortUrl, updateRecentShortUrl } from '../lib/useRecentShor
 import '../styles/link-statistics.css';
 import { getCachedStatistics, invalidateStatistics, loadStatistics, type StatisticsPeriod } from '../lib/statisticsCache';
 import { createStatisticsCsv, downloadStatisticsFile } from '../lib/statisticsExport';
+import { readStatisticsPeriod, STATISTICS_PERIOD_OPTIONS } from '../lib/pageOptions';
+import { usePageOptions } from '../lib/usePageOptions';
 
 const api = getShortURLAPI();
-const PERIOD_OPTIONS = [7, 15, 30, 45, 60] as const;
 const pad = (value: number) => String(value).padStart(2, '0');
 const localDate = (date: Date) => `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
 const bangkokDate = () => {
@@ -40,19 +41,30 @@ export function LinkStatisticsPage() {
   const navigate = useNavigate();
   const { user, loading, openAuth } = useAuth();
   const [data, setData] = useState<StatisticsResponse['data'] | null>(null);
-  const [days, setDays] = useState(30);
-  const [periodMode, setPeriodMode] = useState<'preset' | 'custom'>('preset');
-  const [customRange, setCustomRange] = useState(defaultRange);
+  const { params, updateOptions } = usePageOptions();
+  const [fallbackRange] = useState(defaultRange);
+  const period: StatisticsPeriod = readStatisticsPeriod(params);
+  const days = 'days' in period ? period.days : 30;
+  const periodMode = 'days' in period ? 'preset' : 'custom';
+  const customRange = 'days' in period ? fallbackRange : period;
+  function setCustomRange(value: { startDate: string; endDate: string }) {
+    updateOptions({ days: null, page: null, ...value });
+  }
+  function selectPeriod(value: string) {
+    if (value === 'custom') setCustomRange(customRange);
+    else updateOptions({ days: value, startDate: null, endDate: null, page: null });
+  }
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [actionMessage, setActionMessage] = useState('');
   const [mutating, setMutating] = useState(false);
   const [editing, setEditing] = useState<ShortUrl | null>(null);
-  const [detailsOpen, setDetailsOpen] = useState(false);
+  const detailsOpen = params.get('details') === 'true';
+  function setDetailsOpen(value: boolean) { updateOptions({ details: value ? 'true' : null }); }
   const [pdfOpen, setPdfOpen] = useState(false);
+  const [revision, setRevision] = useState(0);
   const mutation = useRef(false);
   const scope = useRef<string | null>(null);
-  const period: StatisticsPeriod = periodMode === 'custom' ? customRange : { days };
   const periodKey = 'days' in period ? `days:${period.days}` : `range:${period.startDate}:${period.endDate}`;
   const periodLabel = 'days' in period ? `Last ${period.days} days` : `${period.startDate} - ${period.endDate}`;
   useLayoutEffect(() => {
@@ -68,7 +80,7 @@ export function LinkStatisticsPage() {
     let active = true; setBusy(!cached);
     loadStatistics(user.id, id, period).then(response => { if (active) setData(response); }).catch(err => { if (active) setError(libraryError(err)); }).finally(() => { if (active) setBusy(false); });
     return () => { active = false; };
-  }, [user, id, periodKey]);
+  }, [user, id, periodKey, revision]);
   function updateItem(item: ShortUrl) {
     setData(current => current?.item.id === item.id ? { ...current, item } : current);
   }
@@ -108,7 +120,7 @@ export function LinkStatisticsPage() {
   return <main className="my-links-page link-statistics-page">
     <header className="statistics-heading">
       <div className="statistics-heading__title"><Link className="library-back" to="/my-links"><ChevronLeft size={17} aria-hidden="true" />back</Link><h1 title={item?.title || item?.code}>{item?.title || item?.code || 'Statistics'}</h1>{item && <div className="statistics-heading__badges"><Tooltip text={item.kind === 'qr' ? 'QR code' : 'URL'}><span className={`library-kind library-kind--${item.kind}`} role="img" aria-label={item.kind === 'qr' ? 'QR code' : 'URL'}>{item.kind === 'qr' ? <QrCode size={16} aria-hidden="true" /> : <Link2 size={16} aria-hidden="true" />}</span></Tooltip><span className={`library-status library-status--${item.status}`}>{item.status}</span></div>}</div>
-      {user && <div className="statistics-heading__period">{item && <span className="statistics-created">Created <time dateTime={item.createdAt}>{new Date(item.createdAt).toLocaleDateString('en-GB', { dateStyle: 'medium', timeZone: 'Asia/Bangkok' })}</time></span>}<select aria-label="Statistics period" disabled={disabled || busy} value={periodMode === 'custom' ? 'custom' : String(days)} onChange={event => { if (event.target.value === 'custom') setPeriodMode('custom'); else { setDays(Number(event.target.value)); setPeriodMode('preset'); } }}>{PERIOD_OPTIONS.map(option => <option key={option} value={option}>Last {option} days</option>)}<option value="custom">Custom</option></select>{periodMode === 'custom' && <DateRangeField value={customRange} disabled={disabled || busy} onChange={setCustomRange} />}</div>}
+      {user && <div className="statistics-heading__period">{item && <span className="statistics-created">Created <time dateTime={item.createdAt}>{new Date(item.createdAt).toLocaleDateString('en-GB', { dateStyle: 'medium', timeZone: 'Asia/Bangkok' })}</time></span>}<select aria-label="Statistics period" disabled={disabled || busy} value={periodMode === 'custom' ? 'custom' : String(days)} onChange={event => selectPeriod(event.target.value)}>{STATISTICS_PERIOD_OPTIONS.map(option => <option key={option} value={option}>Last {option} days</option>)}<option value="custom">Custom</option></select>{periodMode === 'custom' && <DateRangeField value={customRange} disabled={disabled || busy} onChange={setCustomRange} />}</div>}
     </header>
     {loading || busy ? <p role="status">Loading statistics...</p> : !user ? <><p>Log in to view statistics.</p><button onClick={() => openAuth('login')}>Log in</button></> : error ? <p role="alert">{error}</p> : data && <>
       <div className="statistics-toolbar">
@@ -126,8 +138,9 @@ export function LinkStatisticsPage() {
         <button type="button" className="statistics-details-toggle" aria-expanded={detailsOpen} aria-controls="statistics-link-details" onClick={() => setDetailsOpen(!detailsOpen)}>Link details<ChevronDown size={16} /></button>
         <div id="statistics-link-details" className="statistics-details__content">
         <dl><dt>Original {data.item.kind === 'qr' ? 'content' : 'URL'}</dt><dd>{data.item.originalUrl}</dd><dt>Short URL</dt><dd><a href={data.item.shortUrl} target="_blank" rel="noreferrer" title={`Open ${data.item.shortUrl}`}>{data.item.shortUrl}</a></dd>
-          <div className="statistics-schedule"><div><dt>Opens at</dt><dd>{data.item.startsAt ? formatDate(data.item.startsAt) : 'Immediately'}</dd></div><div><dt>Expires at</dt><dd>{formatDate(data.item.expiresAt)}</dd></div></div>
-          <dt>Folder</dt><dd>{data.item.folderName || 'No folder'}</dd></dl>
+          <div className="statistics-schedule"><div><dt>Opens at</dt><dd className="statistics-detail-value"><CalendarClock size={16} aria-hidden="true" /><span>{data.item.startsAt ? formatDate(data.item.startsAt) : 'Immediately'}</span></dd></div><div><dt>Expires at</dt><dd className="statistics-detail-value"><CalendarX2 size={16} aria-hidden="true" /><span>{formatDate(data.item.expiresAt)}</span></dd></div></div>
+          <dt>Folder</dt><dd className="statistics-detail-value"><Folder size={16} aria-hidden="true" /><span>{data.item.folderName || 'No folder'}</span></dd></dl>
+        {data.item.hasAccessCode && <dl><dt>Password</dt><dd className="statistics-detail-value statistics-access-code"><LockKeyhole size={16} aria-hidden="true" /><span>{data.accessCode ?? 'Loading...'}</span></dd></dl>}
         <div className="library-tags">{data.item.tags.map(tag => <span key={tag.id} className="library-tag"><i style={{ background: tag.color }} />{tag.name}</span>)}</div>
       </div></div><div className="statistics-chart"><div className="statistics-summary-row"><div className="statistics-totals"><div><span>Total visits</span><strong>{data.item.clickCount.toLocaleString()}</strong></div><div><span>{periodLabel}</span><strong>{data.daily.reduce((sum, day) => sum + day.clicks, 0).toLocaleString()}</strong></div></div><StatisticsExportButtons disabled={disabled} onPdf={() => setPdfOpen(true)} onCsv={() => {
           try { downloadStatisticsFile(createStatisticsCsv(data.daily), `qlean-${data.item.code}-statistics.csv`); setActionMessage('Downloaded daily statistics.'); }
@@ -144,7 +157,9 @@ export function LinkStatisticsPage() {
       updateRecentShortUrl(user.id, saved);
       invalidateStatistics(user.id, saved.id);
       if (scope.current !== `${user.id}:${saved.id}`) return;
-      updateItem(saved); setEditing(null); setActionMessage('Changes saved.');
+      setData(current => current ? { ...current, item: saved, accessCode: null } : current);
+      setEditing(null); setActionMessage('Changes saved.');
+      setRevision(current => current + 1);
     }} />}
   </main>;
 }
