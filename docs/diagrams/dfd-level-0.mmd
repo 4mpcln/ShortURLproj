@@ -1,0 +1,74 @@
+---
+config:
+  theme: base
+  look: classic
+  layout: dagre
+  themeVariables:
+    fontFamily: Arial, sans-serif
+    fontSize: 18px
+    primaryColor: '#eff8f3'
+    primaryTextColor: '#222222'
+    primaryBorderColor: '#363636'
+    lineColor: '#535353'
+    edgeLabelBackground: '#ffffff'
+  flowchart:
+    htmlLabels: false
+    curve: linear
+    nodeSpacing: 75
+    rankSpacing: 135
+---
+flowchart LR
+  accTitle: QLEAN - DFD Level 0
+  accDescr: Five functional processes, two external actors and six PostgreSQL data stores.
+
+  Creator["Creator<br/>Guest / Member"]
+  Visitor["Link Visitor"]
+
+  P1(("1.0<br/>Manage<br/>Accounts"))
+  P2(("2.0<br/>Create URLs<br/>and QR Codes"))
+  P3(("3.0<br/>Manage<br/>Library"))
+  P4(("4.0<br/>Resolve Links<br/>and Verify Access"))
+  P5(("5.0<br/>View Statistics<br/>and Export Reports"))
+
+  D1@{ shape: datastore, label: "D1 | users" }
+  D2@{ shape: datastore, label: "D2 | short_urls" }
+  D3@{ shape: datastore, label: "D3 | folders" }
+  D4@{ shape: datastore, label: "D4 | tags" }
+  D5@{ shape: datastore, label: "D5 | short_url_tags" }
+  D6@{ shape: datastore, label: "D6 | click_logs" }
+
+  Creator -->|Name / email, password,<br/>session data| P1
+  P1 -->|Session cookie,<br/>account status| Creator
+  P1 -->|New account record| D1
+  D1 -->|Account and password hash| P1
+
+  Creator -->|URL / QR content, alias,<br/>design, optional access code| P2
+  P2 -->|Short URL / QR image,<br/>validation result| Creator
+  D2 -->|Existing alias records| P2
+  P2 -->|URL records / saved member QR,<br/>encrypted access code| D2
+
+  Creator -->|Owner edits, tags, folder,<br/>schedule, pin / enabled state| P3
+  P3 -->|Member library,<br/>update / deletion status| Creator
+  D2 -->|Owned link records| P3
+  P3 -->|Updated / deleted link records| D2
+  P3 <-->|Folder records| D3
+  P3 <-->|Tag records| D4
+  P3 <-->|Link-tag associations| D5
+
+  Visitor -->|Short code,<br/>six-digit access code| P4
+  D2 -->|Destination, schedule,<br/>enabled state, encrypted code| P4
+  P4 -->|Updated visit count<br/>and last-visit time| D2
+  P4 -->|Successful visit timestamp| D6
+  P4 -->|Redirect URL / QR text,<br/>access prompt / denial| Visitor
+
+  Creator -->|Owned link ID,<br/>date range / report selection| P5
+  D2 -->|Owned metadata, totals,<br/>encrypted access code| P5
+  D6 -->|Visit timestamps| P5
+  P5 -->|Owner details, daily statistics,<br/>CSV / PDF report| Creator
+
+  classDef actor fill:#eef5fc,stroke:#363636,stroke-width:1.5px;
+  classDef process fill:#eff8f3,stroke:#363636,stroke-width:1.5px;
+  classDef store fill:#ffffff,stroke:#363636,stroke-width:1.5px;
+  class Creator,Visitor actor;
+  class P1,P2,P3,P4,P5 process;
+  class D1,D2,D3,D4,D5,D6 store;

@@ -1,0 +1,33 @@
+---
+config:
+  theme: base
+  look: classic
+  layout: dagre
+  themeVariables:
+    fontFamily: Arial, sans-serif
+    fontSize: 18px
+    primaryTextColor: '#222222'
+    lineColor: '#535353'
+    edgeLabelBackground: '#ffffff'
+  flowchart:
+    htmlLabels: false
+    curve: linear
+    nodeSpacing: 100
+    rankSpacing: 180
+---
+flowchart LR
+  accTitle: QLEAN - Context Diagram
+  accDescr: QLEAN as a single system with a creator and a link visitor as external actors.
+  Creator["Creator<br/>Guest / Member"]
+  System(("0<br/>QLEAN<br/>Short URL and<br/>QR System"))
+  Visitor["Link Visitor"]
+
+  Creator -->|Credentials / session data;<br/>URL / QR content, alias and design;<br/>optional code and organization;<br/>owned link / date range requests| System
+  System -->|Account / operation status;<br/>short URLs and QR images;<br/>member library and owner details;<br/>statistics and CSV / PDF reports| Creator
+  Visitor -->|Short code;<br/>six-digit access code| System
+  System -->|Redirect URL / QR text;<br/>access prompt / denial| Visitor
+
+  classDef actor fill:#eef5fc,stroke:#363636,stroke-width:1.5px;
+  classDef process fill:#eff8f3,stroke:#363636,stroke-width:1.5px;
+  class Creator,Visitor actor;
+  class System process;

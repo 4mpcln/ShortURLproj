@@ -1,0 +1,84 @@
+---
+config:
+  theme: base
+  look: classic
+  layout: dagre
+  themeVariables:
+    fontFamily: Arial, sans-serif
+    fontSize: 17px
+    primaryColor: '#f1f7f5'
+    primaryTextColor: '#222222'
+    primaryBorderColor: '#363636'
+    lineColor: '#535353'
+    tertiaryColor: '#ffffff'
+  er:
+    layoutDirection: TB
+    useMaxWidth: false
+    minEntityWidth: 230
+    minEntityHeight: 100
+    entityPadding: 18
+---
+erDiagram
+  accTitle: QLEAN - Entity Relationship Diagram
+  accDescr: Six PostgreSQL tables with 34 columns, primary and foreign keys, unique constraints and optional relationships.
+  direction TB
+
+  users |o..o{ short_urls : owns
+  users ||..o{ folders : owns
+  users ||..o{ tags : owns
+  folders |o..o{ short_urls : groups
+  short_urls ||--o{ short_url_tags : has
+  tags ||--o{ short_url_tags : labels
+  short_urls ||..o{ click_logs : records
+
+  users {
+    uuid id PK
+    varchar(80) name UK "normalized unique"
+    varchar(254) email UK "normalized unique"
+    text password_hash
+    timestamptz created_at
+  }
+
+  short_urls {
+    uuid id PK
+    varchar(32) code UK
+    text original_url "URL or QR text"
+    varchar(160)? title
+    integer click_count
+    timestamptz? last_clicked_at
+    timestamptz created_at
+    timestamptz updated_at
+    uuid? user_id FK "NULL for guest links"
+    varchar(3) kind "url / qr"
+    uuid? folder_id FK
+    timestamptz? starts_at
+    timestamptz? expires_at
+    boolean is_pinned
+    jsonb? qr_options
+    boolean is_enabled
+    text? access_code_ciphertext "AES-256-GCM"
+  }
+
+  folders {
+    uuid id PK
+    uuid user_id FK
+    varchar(60) name "unique per owner"
+  }
+
+  tags {
+    uuid id PK
+    uuid user_id FK
+    varchar(40) name "unique per owner"
+    varchar(7) color "unique per owner"
+  }
+
+  short_url_tags {
+    uuid short_url_id PK,FK
+    uuid tag_id PK,FK
+  }
+
+  click_logs {
+    bigint id PK "sequence-generated"
+    uuid short_url_id FK
+    timestamptz accessed_at
+  }
