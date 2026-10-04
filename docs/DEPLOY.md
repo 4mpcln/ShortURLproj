@@ -37,7 +37,7 @@ Deploy the **repository root**, not Frontend or Backend alone.
 | Function region | `sin1` (Singapore) |
 
 [api/index.mjs](../api/index.mjs) exposes compiled Express as a function.
-`/api/...`, `/health`, and `/s/<code>` reach Backend; frontend paths use the
+`/api/...`, `/health`, `/<code>`, and legacy `/s/<code>` reach Backend; frontend paths use the
 SPA rewrite. No Docker containers run in this deployment.
 
 ## 2. Connect Hosted PostgreSQL
@@ -143,7 +143,7 @@ Check these browser workflows:
 
 1. Open and refresh `/shortenurl` and `/qr-maker` directly.
 2. Register, log out, and log in using username and email.
-3. Create a link, follow its `/s/<code>` address, and check Library/Statistics.
+3. Create a link, follow its `/<code>` address, and check Library/Statistics.
 4. Save/download a member QR code and test CSV/PDF downloads.
 5. Test a protected link with incorrect and correct codes. Library should show
    **Encrypted**, with the code visible only in the owner's statistics.
@@ -167,10 +167,12 @@ For a custom domain connected to this Vercel project, set:
 
 ```dotenv
 WEB_ORIGIN=https://links.example.com
-SHORT_URL_BASE=https://links.example.com/s
+SHORT_URL_BASE=https://links.example.com
 ```
 
-Use your actual HTTPS domain and redeploy. Keep `/s` for the short-link rewrite.
+Use your actual HTTPS domain and redeploy. Remove `/s` from any existing
+`SHORT_URL_BASE` or fallback `APP_BASE_URL` setting to generate root-level links.
+The `/s/<code>` rewrite remains available for existing links.
 Printed QR codes retain their encoded URL; keep the old domain working or
 regenerate codes after changing domains.
 

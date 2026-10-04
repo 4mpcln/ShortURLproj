@@ -19,16 +19,16 @@ function load(overrides = {}) {
   });
 }
 
-test('Vercel uses same-origin secure cookies, namespaced links and optional Redis', () => {
+test('Vercel uses same-origin secure cookies, root-level links and optional Redis', () => {
   const production = load();
   assert.equal(production.status, 0, production.stderr);
   assert.deepEqual(JSON.parse(production.stdout), {
-    webOrigin: 'https://qlean.vercel.app', shortUrlBase: 'https://qlean.vercel.app/s', redisUrl: '', secureCookies: true,
+    webOrigin: 'https://qlean.vercel.app', shortUrlBase: 'https://qlean.vercel.app', redisUrl: '', secureCookies: true,
   });
   const preview = load({ VERCEL_ENV: 'preview' });
   assert.equal(preview.status, 0, preview.stderr);
   assert.equal(JSON.parse(preview.stdout).webOrigin, 'https://qlean-preview.vercel.app');
-  assert.equal(JSON.parse(preview.stdout).shortUrlBase, 'https://qlean-preview.vercel.app/s');
+  assert.equal(JSON.parse(preview.stdout).shortUrlBase, 'https://qlean-preview.vercel.app');
   const custom = load({ WEB_ORIGIN: 'https://qlean.example', SHORT_URL_BASE: 'https://qlean.example/s', REDIS_URL: 'rediss://cache.example:6379' });
   assert.equal(custom.status, 0, custom.stderr);
   assert.equal(JSON.parse(custom.stdout).webOrigin, 'https://qlean.example');

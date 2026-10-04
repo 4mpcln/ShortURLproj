@@ -9,6 +9,14 @@
     { "source": "/api/:path*", "destination": "/api/index" },
     { "source": "/health", "destination": "/api/index" },
     { "source": "/s/:code", "destination": "/api/index" },
+    { "source": "/shortenurl", "destination": "/index.html" },
+    { "source": "/qr-maker", "destination": "/index.html" },
+    { "source": "/register", "destination": "/index.html" },
+    { "source": "/login", "destination": "/index.html" },
+    { "source": "/my-links/:path*", "destination": "/index.html" },
+    { "source": "/link-unavailable/:path*", "destination": "/index.html" },
+    { "source": "/link-access/:path*", "destination": "/index.html" },
+    { "source": "/:code", "destination": "/api/index" },
     { "source": "/(.*)", "destination": "/index.html" }
   ],
   "headers": [

@@ -16,7 +16,7 @@ if (process.env.VERCEL && !process.env.DATABASE_URL) throw new Error('DATABASE_U
 if (process.env.VERCEL && !/^[a-f0-9]{64}$/i.test(process.env.ACCESS_CODE_KEY || '')) {
   throw new Error('ACCESS_CODE_KEY must contain 64 hexadecimal characters on Vercel.');
 }
-const shortUrlBase = new URL(process.env.SHORT_URL_BASE || process.env.APP_BASE_URL || (deploymentOrigin ? `${deploymentOrigin}/s` : `http://localhost:${port}`));
+const shortUrlBase = new URL(process.env.SHORT_URL_BASE || process.env.APP_BASE_URL || deploymentOrigin || `http://localhost:${port}`);
 if (!['http:', 'https:'].includes(shortUrlBase.protocol) || shortUrlBase.username || shortUrlBase.password || shortUrlBase.search || shortUrlBase.hash) {
   throw new Error('SHORT_URL_BASE must be an HTTP/HTTPS base URL without credentials, query parameters or a fragment.');
 }

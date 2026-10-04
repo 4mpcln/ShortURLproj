@@ -109,7 +109,7 @@ Important endpoints:
 - `GET /api/short-urls`
 - `GET /api/short-urls/{code}`
 - `GET /{code}` (local redirect)
-- `GET /s/{code}` (production redirect)
+- `GET /{code}` (redirect; legacy `GET /s/{code}` also supported)
 - `GET /api/my-links`
 - `GET /api/library/organization`
 - `POST /api/library/tags`

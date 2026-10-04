@@ -82,7 +82,7 @@ from its build. Never put database credentials, `JWT_SECRET`, or
 | `REDIS_URL` | Redis connection string; optional on Vercel |
 | `JWT_SECRET` | Stable signing secret; at least 32 characters required in production |
 | `WEB_ORIGIN` | Frontend origin without a page path; local default `http://localhost:3210` |
-| `SHORT_URL_BASE` | Public redirect base; local default `http://localhost:3211`, Vercel default `https://<deployment-domain>/s` |
+| `SHORT_URL_BASE` | Public redirect base; local default `http://localhost:3211`, Vercel default `https://<deployment-domain>` |
 | `APP_BASE_URL` | Fallback when `SHORT_URL_BASE` is unset |
 | `ACCESS_CODE_KEY` | 32-byte key encoded as 64 hexadecimal characters; required on Vercel |
 | `ACCESS_CODE_KEY_FILE` | Local key-file override; otherwise `.data/access-code.key` relative to Backend's working directory |
