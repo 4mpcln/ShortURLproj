@@ -58,10 +58,10 @@ export function LinkAvailabilityPage() {
 
   return <main className="link-availability-page">
     <dialog ref={dialog} className="link-availability-modal" aria-labelledby="link-availability-title" aria-describedby="link-availability-description"
-      onCancel={event => { event.preventDefault(); navigate('/shortenurl', { replace: true }); }}>
+      onCancel={event => { event.preventDefault(); navigate('/', { replace: true }); }}>
       <header className="link-availability-heading">
         <span className="link-availability-brand"><QleanLogo variant="compact" /><span className="link-availability-brand-text">Qlean</span></span>
-        <Link className="link-availability-close" to="/shortenurl" aria-label="Close" title="Back to Qlean"><X size={20} aria-hidden="true" /></Link>
+        <Link className="link-availability-close" to="/" aria-label="Close" title="Back to Qlean"><X size={20} aria-hidden="true" /></Link>
       </header>
       <div className="link-availability-message" role="status" aria-live="polite" aria-busy={loading}>
         {expired || disabled || error ? <CircleAlert size={36} strokeWidth={1.5} aria-hidden="true" /> : <Clock3 size={36} strokeWidth={1.5} aria-hidden="true" />}
@@ -74,7 +74,7 @@ export function LinkAvailabilityPage() {
       </div>}
       {code && <p className="link-availability-alias">/{code}</p>}
       <footer className="link-availability-actions">
-        <Link to="/shortenurl"><ArrowLeft size={17} aria-hidden="true" />Back to <QleanLogo variant="inline" /><span className="link-availability-brand-text"> Qlean</span></Link>
+        <Link to="/"><ArrowLeft size={17} aria-hidden="true" />Back to <QleanLogo variant="inline" /><span className="link-availability-brand-text"> Qlean</span></Link>
         {!expired && error !== 'missing' && <button type="button" disabled={loading} onClick={() => setAttempt(current => current + 1)}><RefreshCw size={17} aria-hidden="true" />{loading ? 'Checking...' : 'Check again'}</button>}
       </footer>
     </dialog>

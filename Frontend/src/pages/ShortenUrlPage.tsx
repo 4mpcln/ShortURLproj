@@ -91,7 +91,7 @@ export function ShortenUrlPage() {
     <main className="shorten-page">
       <section className="workspace">
         <div className="shorten-intro">
-          <h1>Make every link simpler.</h1>
+          <h1>Free URL Shortener</h1>
           <p>Shorten, share and track your links — fast and free.</p>
         </div>
 

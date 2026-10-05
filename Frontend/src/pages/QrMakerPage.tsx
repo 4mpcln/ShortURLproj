@@ -123,7 +123,7 @@ export function QrMakerPage() {
   return (
     <main className="qr-page">
       <div className="qr-intro">
-        <h1>Turn anything into a QR code.</h1>
+        <h1>Free QR Code Generator</h1>
         <p>Create, customize and share your QR code instantly.</p>
       </div>
 

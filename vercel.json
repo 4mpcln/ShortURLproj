@@ -5,14 +5,16 @@
   "buildCommand": "npm run build",
   "outputDirectory": "Frontend/dist",
   "regions": ["sin1"],
+  "redirects": [
+    { "source": "/shortenurl", "destination": "/", "statusCode": 301 }
+  ],
   "rewrites": [
     { "source": "/robots.txt", "destination": "/robots.txt" },
     { "source": "/sitemap.xml", "destination": "/sitemap.xml" },
     { "source": "/api/:path*", "destination": "/api/index" },
     { "source": "/health", "destination": "/api/index" },
     { "source": "/s/:code", "destination": "/api/index" },
-    { "source": "/shortenurl", "destination": "/index.html" },
-    { "source": "/qr-maker", "destination": "/index.html" },
+    { "source": "/qr-maker", "destination": "/qr-maker.html" },
     { "source": "/register", "destination": "/index.html" },
     { "source": "/login", "destination": "/index.html" },
     { "source": "/my-links/:path*", "destination": "/index.html" },
@@ -22,6 +24,10 @@
     { "source": "/(.*)", "destination": "/index.html" }
   ],
   "headers": [
+    {
+      "source": "/:section(dashboard|login|register|my-links|link-access|link-unavailable|api|s|health)/:path*",
+      "headers": [{ "key": "X-Robots-Tag", "value": "noindex, follow" }]
+    },
     {
       "source": "/api/:path*",
       "headers": [{ "key": "Cache-Control", "value": "no-store" }]

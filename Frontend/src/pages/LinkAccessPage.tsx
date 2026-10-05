@@ -58,7 +58,7 @@ export function LinkAccessPage() {
     void unlock(pin);
   }
   return <main className="link-access-page"><Modal title={content !== null ? 'QR content' : 'Protected link'} busy={busy}
-    onClose={() => navigate('/shortenurl', { replace: true })}>
+    onClose={() => navigate('/', { replace: true })}>
     <form className="access-code-form" onSubmit={submit}>
       {content !== null ? <pre>{content}</pre> : <>
         <LockKeyhole size={28} aria-hidden="true" />

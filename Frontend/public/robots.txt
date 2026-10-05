@@ -3,5 +3,11 @@ Allow: /
 Disallow: /dashboard
 Disallow: /login
 Disallow: /register
+Disallow: /my-links
+Disallow: /api/
+Disallow: /health
+Disallow: /link-access/
+Disallow: /link-unavailable/
+Disallow: /s/
 
 Sitemap: https://www.qlean.click/sitemap.xml

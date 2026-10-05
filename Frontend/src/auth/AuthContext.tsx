@@ -63,7 +63,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setPendingPrompt(false);
     setPrompted(true);
     try { sessionStorage.setItem('qlean-auth-prompted', 'true'); } catch { /* Keep the choice in memory. */ }
-    navigation.current('/shortenurl', { replace: true });
+    navigation.current('/', { replace: true });
   }, []);
 
   useEffect(() => {
@@ -118,7 +118,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!loading && !user && /^\/my-links(?:\/|$)/.test(pathname)) {
-      navigation.current('/shortenurl', { replace: true });
+      navigation.current('/', { replace: true });
     }
   }, [loading, user, pathname]);
 

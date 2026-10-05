@@ -119,7 +119,7 @@ export function MyLinksPage() {
         <select aria-label="Folder filter" value={folder} onChange={event => setFolder(event.target.value)}><option value="all">All folders</option>{folders.map(([id,name]) => <option key={id} value={id}>{name}</option>)}</select>
         <select aria-label="Tag filter" value={tag} onChange={event => selectTag(event.target.value)}><option value="all">All tags</option>{tags.map(([id,name]) => <option key={id} value={id}>{name}</option>)}</select>
       </div>
-      {busy ? <p role="status">Loading library...</p> : !visible.length ? <div className="library-empty"><Link2 size={36} strokeWidth={1} /><p>{items.length ? 'No matching items.' : 'No saved links or QR codes yet.'}</p><Link to="/shortenurl">Create a link</Link></div> : <div className="library-grid">
+      {busy ? <p role="status">Loading library...</p> : !visible.length ? <div className="library-empty"><Link2 size={36} strokeWidth={1} /><p>{items.length ? 'No matching items.' : 'No saved links or QR codes yet.'}</p><Link to="/">Create a link</Link></div> : <div className="library-grid">
         {visible.map(item => <MyLibraryCard key={item.id} item={item} disabled={pinning !== null || deleting !== null || toggling !== null}
           onPin={pin} onToggleEnabled={toggleEnabled} onCopy={copy} onMessage={setMessage} onEdit={item => setEditing({ owner: user.id, item })} onDelete={remove} />)}
       </div>}

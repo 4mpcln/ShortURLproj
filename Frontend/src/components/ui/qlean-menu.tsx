@@ -22,12 +22,12 @@ export function QleanMenu({ logo, theme, onThemeChange }: QleanMenuProps) {
   return (
     <header className="qlean-header">
       <nav className="qlean-menu" data-theme={theme} aria-label="Main navigation">
-        <Link className="qlean-brand" to="/shortenurl" aria-label="Qlean home">
+        <Link className="qlean-brand" to="/" aria-label="Qlean home">
           {logo ?? <QleanLogo />}
         </Link>
 
         <div className="qlean-menu__pages">
-          <NavLink to="/shortenurl">
+          <NavLink to="/" end>
             <Link2 size={18} aria-hidden="true" />
             Shorten URL
           </NavLink>

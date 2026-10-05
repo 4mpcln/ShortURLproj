@@ -1,5 +1,5 @@
 import { useEffect, useState, type MouseEvent } from 'react';
-import { Link, Navigate, Route, Routes, useMatch, useNavigate } from 'react-router-dom';
+import { Link, Navigate, Route, Routes, useLocation, useMatch, useNavigate } from 'react-router-dom';
 import AnimatedBackground from './components/ui/animated-background';
 import { QleanMenu, type Theme } from './components/ui/qlean-menu';
 import { ShortenUrlPage } from './pages/ShortenUrlPage';
@@ -10,6 +10,12 @@ import { LinkAvailabilityPage } from './pages/LinkAvailabilityPage';
 import { LinkAccessPage } from './pages/LinkAccessPage';
 import { useAuth, type AuthMode } from './auth/AuthContext';
 import { AuthModal } from './components/ui/auth-modal';
+import { PageSeo } from './components/PageSeo';
+
+function LegacyShortenerRedirect() {
+  const { search, hash } = useLocation();
+  return <Navigate to={`/${search}${hash}`} replace />;
+}
 
 function getTheme(): Theme {
   try {
@@ -24,7 +30,7 @@ function AuthEntry({ mode }: { mode: AuthMode }) {
   const navigate = useNavigate();
   useEffect(() => {
     if (!user) openAuth(mode);
-    navigate('/shortenurl', { replace: true });
+    navigate('/', { replace: true });
   }, [mode]);
   return null;
 }
@@ -49,11 +55,12 @@ export function App() {
 
   return (
     <div className={`app-background-shell${statisticsPage ? ' app-background-shell--statistics' : ''}`} onClickCapture={handleToolClick}>
+      <PageSeo />
       <AnimatedBackground />
       {!availabilityPage && !accessPage && <QleanMenu theme={theme} onThemeChange={setTheme} />}
       <Routes>
-        <Route path="/" element={<Navigate to="/shortenurl" replace />} />
-        <Route path="/shortenurl" element={<ShortenUrlPage />} />
+        <Route path="/" element={<ShortenUrlPage />} />
+        <Route path="/shortenurl" element={<LegacyShortenerRedirect />} />
         <Route path="/qr-maker" element={<QrMakerPage />} />
         <Route path="/register" element={<AuthEntry mode="register" />} />
         <Route path="/login" element={<AuthEntry mode="login" />} />
@@ -61,7 +68,7 @@ export function App() {
         <Route path="/my-links/:id" element={<LinkStatisticsPage />} />
         <Route path="/link-unavailable/:code" element={<LinkAvailabilityPage />} />
         <Route path="/link-access/:code" element={<LinkAccessPage />} />
-        <Route path="*" element={<main className="pending-page"><h1>Page not found</h1><Link to="/shortenurl">Back to Short URL</Link></main>} />
+        <Route path="*" element={<main className="pending-page"><h1>Page not found</h1><Link to="/">Back to Short URL</Link></main>} />
       </Routes>
       {!availabilityPage && !accessPage && <AuthModal />}
     </div>
