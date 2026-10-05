@@ -6,6 +6,8 @@
   "outputDirectory": "Frontend/dist",
   "regions": ["sin1"],
   "rewrites": [
+    { "source": "/robots.txt", "destination": "/robots.txt" },
+    { "source": "/sitemap.xml", "destination": "/sitemap.xml" },
     { "source": "/api/:path*", "destination": "/api/index" },
     { "source": "/health", "destination": "/api/index" },
     { "source": "/s/:code", "destination": "/api/index" },
