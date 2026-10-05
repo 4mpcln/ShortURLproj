@@ -1,11 +1,7 @@
 User-agent: *
-Disallow: /
-Allow: /$
-Allow: /shortenurl$
-Allow: /qr-maker$
-Allow: /assets/
-Allow: /qlean-logo.png$
-Allow: /robots.txt$
-Allow: /sitemap.xml$
+Allow: /
+Disallow: /dashboard
+Disallow: /login
+Disallow: /register
 
 Sitemap: https://www.qlean.click/sitemap.xml
