@@ -9,6 +9,8 @@
     { "source": "/shortenurl", "destination": "/", "statusCode": 301 }
   ],
   "rewrites": [
+    { "source": "/assets/:path*", "destination": "/assets/:path*" },
+    { "source": "/:file(.*\\.[^/]+)", "destination": "/:file" },
     { "source": "/robots.txt", "destination": "/robots.txt" },
     { "source": "/sitemap.xml", "destination": "/sitemap.xml" },
     { "source": "/api/:path*", "destination": "/api/index" },
@@ -20,7 +22,7 @@
     { "source": "/my-links/:path*", "destination": "/index.html" },
     { "source": "/link-unavailable/:path*", "destination": "/index.html" },
     { "source": "/link-access/:path*", "destination": "/index.html" },
-    { "source": "/:code", "destination": "/api/index" },
+    { "source": "/:code([a-zA-Z0-9_-]+)", "destination": "/api/index" },
     { "source": "/(.*)", "destination": "/index.html" }
   ],
   "headers": [

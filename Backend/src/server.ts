@@ -114,7 +114,7 @@ app.post('/api/short-urls/:code/unlock', unlockLimiter, async (req, res, next) =
   } catch (error) { next(error); }
 });
 
-app.get(['/s/:code', '/:code'], async (req, res, next) => {
+app.get(['/s/:code', '/:code([a-zA-Z0-9_-]+)'], async (req, res, next) => {
   res.setHeader('Cache-Control', 'no-store');
   try {
     const code = z.string().parse(req.params.code);
